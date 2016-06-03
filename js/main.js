@@ -23,9 +23,21 @@ $(document).ready(function(e) {
 });
 
 $("input[name=submit]").click(function(e) {
-  var mess = $("input[name=message]").val()
+  var mess = $("textarea[name=message]").val();
+  var mail = $("input[name=mail]").val();
   if (mess != "") {
-    $.post("http://mragni.altervista.org/respond.php", {message: mess});
+    $.post("http://mragni.altervista.org/respond.php",
+      {message: mess, mail: mail}).
+      done(function(d) { console.log(d);
+        if(d == "NO") {
+          alert("There was an error...");
+        }
+        if (d == "OK") {
+          alert("Message sent!");
+          $("textarea[name=message]").val("");
+          $("input[name=mail]").val("");
+        }
+      });
   }
   return false;
 })

@@ -47,12 +47,15 @@ body {
     margin-top: 200px;
     margin-bottom: 25px;
     padding-bottom: 15px; }
-  body .message {
+  body .message:first-child {
     margin-top: 30px; }
-    body .message input {
-      background: transparent; }
-    body .message input:hover {
-      background: rgba(1, 1, 0, 0.5); }
+  body .message input,
+  body .message textarea {
+    background: transparent;
+    resize: none; }
+  body .message input:hover,
+  body .message textarea:hover {
+    background: rgba(1, 1, 0, 0.5); }
 
 .error {
   font-size: bold;
@@ -61,7 +64,7 @@ body {
   right: 0;
   margin: 0px;
   padding: 5px;
-  color: #666;
+  color: #222;
   z-index: -1;
   font-size: 20rem; }
 

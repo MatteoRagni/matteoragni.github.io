@@ -63,13 +63,19 @@ body {
     padding-bottom: 15px;
   }
 
-  .message {
+  .message:first-child {
     margin-top: 30px;
-    input {
+  }
+
+  .message {
+    input,
+    textarea {
       background: transparent;
+      resize: none;
     }
 
-    input:hover {
+    input:hover,
+    textarea:hover {
       background: rgba(0.6, 1.0, 0, 0.5);
     }
   }
@@ -82,7 +88,7 @@ body {
   right: 0;
   margin: 0px;
   padding: 5px;
-  color: #666;
+  color: #222;
   z-index: -1;
   font-size: 20rem;
 }
