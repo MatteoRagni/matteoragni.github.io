@@ -19,5 +19,13 @@ $(document).ready(function(e) {
     particleground(document.getElementById("b2"), property);
     //particleground(document.getElementById("b3"), property);
 
-    new WOW().init();
+    //new WOW().init();
 });
+
+$("input[name=submit]").click(function(e) {
+  var mess = $("input[name=message]").val()
+  if (mess != "") {
+    $.post("http://mragni.altervista.org/respond.php", {message: mess});
+  }
+  return false;
+})
