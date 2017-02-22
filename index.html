@@ -1,67 +1,556 @@
 <!DOCTYPE html>
-<!DOCTYPE html>
-<html>
-  <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+<!--[if IE 8]> <html lang="en" class="ie8"> <![endif]-->
+<!--[if IE 9]> <html lang="en" class="ie9"> <![endif]-->
+<!--[if !IE]><!--> <html lang="en"> <!--<![endif]-->
+<head>
     <title>Matteo Ragni</title>
+    <!-- Meta -->
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Matteo Ragni">
+    <meta name="author" content="Matteo Ragni, based upon the work of Xiaoying Riley">
+    <link rel="shortcut icon" href="favicon.ico">
+    <!-- Global CSS -->
+    <link rel="stylesheet" href="assets/plugins/bootstrap/css/bootstrap.min.css">
+    <!-- Plugins CSS -->
+    <link rel="stylesheet" href="assets/plugins/font-awesome/css/font-awesome.css">
 
+    <!-- Theme CSS -->
+    <link id="theme-style" rel="stylesheet" href="assets/css/styles.css">
+    <link id="theme-style" rel="stylesheet" href="assets/css/form.css">
+    <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
+    <!--[if lt IE 9]>
+      <script src="https://oss.maxcdn.com/html5shiv/3.7.2/html5shiv.min.js"></script>
+      <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
+    <![endif]-->
+</head>
 
-    <link href="//fonts.googleapis.com/css?family=Raleway:400,300,600" rel="stylesheet" type="text/css">
-    <link rel="stylesheet" href="/css/normalize.css" media="screen" type="text/css" charset="utf-8">
-    <link rel="stylesheet" href="/css/skeleton.css" media="screen" type="text/css" charset="utf-8">
-    <link rel="stylesheet" href="/css/main.css" media="screen" type="text/css" charset="utf-8">
-  </head>
-  <body>
-    <!--<div class="backgroundCanvas" id="b3"></div>-->
-    <div class="backgroundCanvas" id="b2"></div>
-    <div class="backgroundCanvas" id="b1"></div>
+<style media="screen">
+  img.profile { width: 100px; }
+</style>
 
-    <!-- begin ALPHA -->
-    <div class="container u-full-width">
-      <!-- begin BETA -->
-      <div class="container">
-        <div class="row">
-          <div class="column">
-            <h2>Matteo Ragni</h2>
-            <h3>Coming Soon...</h3>
-          </div>
-        </div>
-        <div class="row message">
-          <div class="column">
-            <textarea name="message" placeholder="Write your message..." class="u-full-width" rows="3" required></textarea>
-          </div>
-        </div>
-        <div class="row message">
-          <div class="nine columns">
-            <input class="u-full-width" name="mail" type="email" placeholder="Write your email address..." required>
-         </div>
-          <div class="three columns">
-            <input class="u-full-width" name="submit" type="submit" value="Say Hello">
-          </div>
-        </div>
-      </div>
-      <!-- end BETA -->
+<body>
+    <div class="wrapper">
+        <div class="sidebar-wrapper">
+            <div class="profile-container">
+                <img class="profile" src="assets/images/profile.png" alt="" />
+                <h1 class="name">Matteo Ragni</h1>
+                <h3 class="tagline">Mechatronics Engineer</h3>
+            </div><!--//profile-container-->
 
+            <div class="contact-container container-block">
+                <ul class="list-unstyled contact-list">
+                    <li class="email"><i class="fa fa-envelope"></i><a href="#contact">Contact me</a></li>
+                    <!--<li class="phone"><i class="fa fa-phone"></i><a href="tel:+393491901149">+39 349 190 1149</a></li>-->
+                    <!--<li class="website"><i class="fa fa-globe"></i><a href="https://github.com/MatteoRagni" target="_blank">github.com/MatteoRagni</a></li>-->
+                    <li class="linkedin"><i class="fa fa-linkedin"></i><a href="https://linkedin.com/in/matteoragni" target="_blank">in/matteoragni</a></li>
+                    <li class="github"><i class="fa fa-github"></i><a href="https://github.com/MatteoRagni" target="_blank">github/MatteoRagni</a></li>
+                    <li class="github"><i class="fa fa-bitbucket"></i><a href="https://bitbucket.org/MatteoRagni" target="_blank">bitbucket/MatteoRagni</a></li>
+                    <!--<li class="twitter"><i class="fa fa-twitter"></i><a href="https://twitter.com/??" target="_blank">@</a></li>-->
+                </ul>
+            </div><!--//contact-container-->
+            <div class="education-container container-block">
+                <h2 class="container-block-title">Education</h2>
+                <div class="item">
+                    <h4 class="degree">PhD in Materials, Mechatronics and System Engineering</h4>
+                    <h5 class="meta">University of Trento</h5>
+                    <div class="time">2014 - Present</div>
+                </div><!--//item-->
+                <div class="item">
+                    <h4 class="degree">MSc in Mechatronics Engineering</h4>
+                    <h5 class="meta">University of Trento</h5>
+                    <div class="time">2012 - 2014</div>
+                </div><!--//item-->
+                <div class="item">
+                    <h4 class="degree">BSc in Industrial Engineering</h4>
+                    <h5 class="meta">University of Trento</h5>
+                    <div class="time">2008 - 2012</div>
+                </div><!--//item-->
+            </div><!--//education-container-->
 
+            <div class="languages-container container-block">
+                <h2 class="container-block-title">Languages</h2>
+                <ul class="list-unstyled interests-list">
+                    <li>Italian <span class="lang-desc">(Native)</span></li>
+                    <li>English <span class="lang-desc">(Professional)</span></li>
+                </ul>
+            </div><!--//languages-->
+
+            <div class="interests-container container-block">
+                <h2 class="container-block-title">Interests</h2>
+                <ul class="list-unstyled interests-list">
+                    <li>Artificial Intelligence</li>
+                    <li>Programming and Computer Science</li>
+                    <li>Manufacturing Technologies</li>
+                    <li>Engineering</li>
+                    <li>LEGO!</li>
+                </ul>
+            </div><!--//interests-->
+
+        </div><!--//sidebar-wrapper-->
+
+        <div class="main-wrapper">
+
+            <section class="section summary-section">
+                <h2 class="section-title"><i class="fa fa-user"></i>About Me</h2>
+                <div class="summary">
+                    <p>
+                      I'm a very passionate engineer, and I always wanted to study in the field of
+                      applied artificial intelligence. Now I'm completing my period as a PhD candidate
+                      and I'm enriching my profile in different AI technologies, from deep learning,
+                      to spikying neural networks, and knowledge based system. I can prove a strong
+                      background as programmer in different languages, and programming is for sure
+                      something that I really love.
+                    </p>
+                    <p>
+                      During my free time I like to play with my 3D Delta printer and do some fitness
+                      activity.
+                    </p>
+                </div><!--//summary-->
+            </section><!--//section-->
+
+            <section class="section experiences-section">
+                <h2 class="section-title" id="experience"><i class="fa fa-briefcase"></i>Experiences</h2>
+
+                <div class="item">
+                    <div class="meta">
+                        <div class="upper-row">
+                            <h3 class="job-title">Teaching Assistant in Numerical Methods <br> and Programming Foundations</h3>
+                            <div class="time">2015 - Present</div>
+                        </div><!--//upper-row-->
+                        <div class="company">University of Trento</div>
+                    </div><!--//meta-->
+                    <div class="details">
+                        <p>Frontal Lecture on use of Ruby programming language to develop numerical methods for
+                          Industrial Engineering. Ruby was chosen because of its simplicity and is expressivity, that
+                          is fundamental for students that try for the first time to develop a project.</p>
+                        <p>To help students during the course an online documentation on the lectures
+                          is offered here: <a href="http://ragni.me/ncalc/">ragni.me/ncalc/</a></p>
+                    </div><!--//details-->
+                </div><!--//item-->
+
+                <div class="item">
+                    <div class="meta">
+                        <div class="upper-row">
+                            <h3 class="job-title">Visiting Researcher</h3>
+                            <div class="time">2016</div>
+                        </div><!--//upper-row-->
+                        <div class="company">London Middlesex University</div>
+                    </div><!--//meta-->
+                    <div class="details">
+                        <p>Visiting Researcher at School of Science and Technology. Collaboration with
+                          Prof. David Windridge in the field of Artificial and Cognitive Intelligence
+                          and Deep Learning.</p>
+                    </div><!--//details-->
+                </div><!--//item-->
+
+                <div class="item">
+                    <div class="meta">
+                        <div class="upper-row">
+                            <h3 class="job-title">Grid Cluster System Administrator</h3>
+                            <div class="time">2013 - 2014</div>
+                        </div><!--//upper-row-->
+                        <div class="company">University of Trento</div>
+                    </div><!--//meta-->
+                    <div class="details">
+                        <p>A grid system is very useful when a lot of computational power is required.
+                          During this experience I developed a Linux based cluster, <i>xCluster</i> with
+                          Torque/Maui Resource manager and scheluder, that was patched to support GPU. The cluster
+                          has almost 1300 cores, 350 NVidia capable GPUs and more than 2TB of available
+                          RAM. The cluster has a web interface available
+                          <a href="https://github.com/MatteoRagni/Force">here</a></p>
+                    </div><!--//details-->
+                </div><!--//item-->
+
+                <div class="item">
+                    <div class="meta">
+                        <div class="upper-row">
+                            <h3 class="job-title">Learning Assistant in Calculus</h3>
+                            <div class="time">2013 - 2014</div>
+                        </div><!--//upper-row-->
+                        <div class="company">University of Trento</div>
+                    </div><!--//meta-->
+                    <div class="details">
+                        <p>Correction of homeworks with students in class for the Telecommunication
+                          Engineering Department</p>
+                    </div><!--//details-->
+                </div><!--//item-->
+
+                <div class="item">
+                    <div class="meta">
+                        <div class="upper-row">
+                            <h3 class="job-title">Bartender</h3>
+                            <div class="time">2004 - 2008</div>
+                        </div><!--//upper-row-->
+                        <div class="company">Mandragora</div>
+                    </div><!--//meta-->
+                </div><!--//item-->
+
+            </section><!--//section-->
+
+            <section class="section experiences-section">
+                <h2 class="section-title" id="publications"><i class="fa fa-book"></i>Publications</h2>
+
+                <div class="item">
+                    <div class="meta">
+                        <div class="upper-row">
+                            <h3 class="job-title">Mr.CAS - A minimalistic (pure) Ruby CAS for <br>
+                                                  Fast Prototyping and Code Generation</h3>
+                            <div class="time">IN REVIEW</div>
+                        </div><!--//upper-row-->
+                        <div class="company">Matteo Ragni<br>
+                          Software X - Elsevier</div>
+                    </div><!--//meta-->
+                    <div class="details abstract">
+                      <details>
+                        <summary>Read Abstract</summary>
+                        <div class="summary-wrapper">
+                        <p>
+                          There are complete <b>Computer Algebra System</b> (CAS) systems on the market with
+                          complete solutions for manipulation of analytical models. But exporting a model
+                          to a given target language is often a rigid procedure that requires some manual
+                          post-processing, even with a good software.
+                        </p>
+                        <p>
+                          This work presents a Ruby library that exposes core CAS capabilities-i.e.
+                          simplification, substitution, evaluation, etc. The library aims at rapid prototyping
+                          of numerical interfaces, and code generation for different target languages,
+                          separating mathematical expression from code generation rules supporting best
+                          practices for numerical conditioning. The library is implemented in pure Ruby
+                          language and is compatible with most Ruby interpreters.
+                        </p>
+                      </div>
+                      </details>
+                    </div><!--//details-->
+                </div><!--//item-->
+
+                <div class="item">
+                    <div class="meta">
+                        <div class="upper-row">
+                            <h3 class="job-title">ARTool - Augmented Reality Human-Machine Interface <br>
+                                                  for Machining Setup and Maintenance</h3>
+                            <div class="time">IN REVIEW</div>
+                        </div><!--//upper-row-->
+                        <div class="company">Amedeo Setti, Paolo Bosetti, Matteo Ragni<br>
+                          Chapter - Studies in Computational Intelligence - Springer Book</div>
+                    </div><!--//meta-->
+                      <div class="details abstract">
+                        <details>
+                          <summary>Read Abstract</summary>
+                          <div class="summary-wrapper">
+                          <p>
+                            In manufacturing applications, setup and part-program verification on CNC machine tools
+                            is a time-consuming and error-prone operation, whose costs are especially relevant when
+                            dealing with small batches, custom components, and large/complex shapes. This paper
+                            presents an Augmented Reality application aimed at supporting machine tool operators in
+                            setting up the machining process, simplifying and quickening the identification of setup
+                            errors and misalignments.
+                          </p>
+                          <p>
+                            The paper firstly discusses the system architecture and its implementation,
+                            then presents a set of benchmark tests assessing system accuracy and reliability in
+                            ego-localization against an open-source AR library and an optical multistereoscopic motion
+                            capture ground-truth. Finally, the effectiveness of the proposed solution on typical
+                            part-program setup workflow is assessed by comparison with a standard in-air part-program
+                            execution and evaluated by means of a NASA TLX test campaign.
+                          </p>
+                        </div>
+                    </div><!--//details-->
+                </div><!--//item-->
+
+                <div class="item">
+                    <div class="meta">
+                        <div class="upper-row">
+                            <h3 class="job-title">Hypermedia navigation: Differences between spatial <br>
+                                                 cognitive styles</h3>
+                            <div class="time">2017</div>
+                        </div><!--//upper-row-->
+                        <div class="company">Laura Lugli, Matteo Ragni, Raffaella Nori, Laura Piccardi<br>
+                          Computers in Human Behavior - Elsevier - v.66 - pp.191-200</div>
+                    </div><!--//meta-->
+                      <div class="details abstract">
+                        <details>
+                          <summary>Read Abstract</summary>
+                          <div class="summary-wrapper">
+                          <p>
+                            Recently, many studies have investigated the role of individual and cognitive differences
+                            during Web navigation and Web searching. Despite this interest, no works have considered
+                            the role may assume individual differences in real-environment navigation during Web
+                            navigation. The aim of this work is to investigate the effect of different spatial
+                            cognitive styles: Landmark style (LS), Route style (RS) and Survey style (SS), on
+                            Web searching behaviour. In real-environment navigation, having a specific style determines
+                            the type of information individuals selected to navigate and orient themselves. We
+                            hypothesize that LS individuals are less proficient during Web exploration due to their
+                            analytical analysis of the environmental features. Vice versa SS individuals will show
+                            high performance on Web exploration for their holistic analysis of the World.
+                          </p>
+                          <p>
+                            We asked 30 College Students (10 LS, 10 RS, 10 SS) to solve three Web information tasks.
+                            The spatial cognitive style of participants was assessed through the Spatial Cognitive
+                            Style Test, and they were also asked to fill in a questionnaire about their internet
+                            and computer use. An ad hoc key-logger program for browsers was used to collect Web
+                            behaviour measures. In particular, the measures considered were: search engine tools
+                            used (e.g. back button), pages visited and revisited, time spent on information searching,
+                            and mouse cursor movements.
+                          </p>
+                          <p>
+                            The results showed significant differences between the spatial
+                            cognitive styles: LS seems to use a trial and error strategy in order to obtain the
+                            relevant information. Differences also emerged in the distribution of mouse cursor movements
+                            during Web navigation.
+                          </p>
+                        </div>
+                        </details>
+                    </div><!--//details-->
+                </div><!--//item-->
+
+                <div class="item">
+                    <div class="meta">
+                        <div class="upper-row">
+                            <h3 class="job-title">ARTool - Augmented Reality Platform for Machining <br>
+                                                  Setup and Maintenance</h3>
+                            <div class="time">2016</div>
+                        </div><!--//upper-row-->
+                        <div class="company">Paolo Bosetti, Amedeo Setti, Matteo Ragni<br>
+                          Intellisys - SAI Intelligent Systems Conference, London</div>
+                    </div><!--//meta-->
+                    <div class="details abstract">
+                      <details>
+                        <summary>Read Abstract</summary>
+                        <div class="summary-wrapper">
+                        <p>
+                          In manufacturing applications, setup and part-program verification on CNC machine tools is a
+                          time-consuming and error-prone operation, whose costs are especially relevant when dealing with
+                          small batches, custom components, and large/complex shapes. This paper presents an Augmented
+                          Reality application aimed at supporting machine tool operators in setting up the machining process,
+                          simplifying and quickening the iden-tification of setup errors and misalignments.
+                        </p>
+                        <p>
+                          The paper firstly discusses the system architecture and its implementation, then presents a
+                          set of benchmark tests assessing system accuracy and reliability in ego-localization against
+                          an open-source AR library and an optical multistereoscopic motion capture ground-truth. Finally,
+                          the effectiveness of the proposed solution on the typical part-program setup workflow is
+                          assessed by comparison with a standard in-air part-program execution and evaluated by means
+                          of a NASA TLX test campaign.
+                        </p>
+                      </div>
+                      </details>
+                    </div><!--//details-->
+                </div><!--//item-->
+
+                <div class="item">
+                    <div class="meta">
+                        <div class="upper-row">
+                            <h3 class="job-title">Milling part-program pre-processing for <br>
+                                                  jerk-limited, minimum-time toolpaths based<br>
+                                                  on optimal control theory</h3>
+                            <div class="time">2016</div>
+                        </div><!--//upper-row-->
+                        <div class="company">Paolo Bosetti, Matteo Ragni <br>
+                          IEEJ Journal of Industry Applications - Vol. 5 (2016) No. 2 p. 53-60</div>
+                    </div><!--//meta-->
+                      <div class="details abstract">
+                        <details>
+                          <summary>Read Abstract</summary>
+                          <div class="summary-wrapper">
+                          <p>
+                            The key task performed by CNCs is the generation of the time sequence of set points for driving
+                            each physical axis of the machine tool during program execution. This interpolation of axes
+                            movement must satisfy a number of constraints on axes dynamics (velocity, acceleration, and jerk),
+                            and on process outcome (smooth tool movement and precise tracking of the nominal tool path at
+                            the desired feed rate). This paper presents an algorithm that aims at solving the axes
+                            interpolation problem by exploiting an optimal control problem formulation. Unlike other
+                            solutions proposed in the literature, the approach presented here employs an original approach
+                            by assuming a predefined path tracking tolerance—to be added to the constraints listed earlier—and
+                            calculating the entire trajectory (path and feed rate profile) that satisfies the given constraints.
+                          </p>
+                          <p>
+                            The proposed solution is used for preprocessing a milling part program and redefining the sequence
+                            of positioning commands to cope with the solution of the OC problem. The new part program is then
+                            executed by a state-of-the-art industrial CNC, and the effectiveness in reducing execution time
+                            and axes accelerations is experimentally tested and reported.
+                          </p>
+                        </div>
+                        </details>
+                    </div><!--//details-->
+                </div><!--//item-->
+
+                <div class="item">
+                    <div class="meta">
+                        <div class="upper-row">
+                            <h3 class="job-title">Avionic Perception-Action model for UAV aimed <br>
+                                                  at avalanche buried searching</h3>
+                            <div class="time">2015</div>
+                        </div><!--//upper-row-->
+                        <div class="company">Matteo Ragni <br>
+                          Conference procedings - AIMETA 2015 - XXII Conference - <br>
+                          The Italian Association of Theoretical and Applied Mechanics</div>
+                    </div><!--//meta-->
+                      <div class="details abstract">
+                        <details>
+                          <summary>Read Abstract</summary>
+                          <div class="summary-wrapper">
+                          <p>
+                            Starting from the basic paradigm of perception-action, an avionic system
+                            for an UAV aimed at avalanche rescue is derived as autonomous agent. Using
+                            last advances in cognitive science, situatedness and embodiment for the
+                            agent are analyzed, and exploited to reach the mission goal. Part of the
+                            searching algorithm is introduced as one of the complex behaviors in which
+                            the agent must decide between different intents.
+                          </p>
+                          <p>
+                            A stacked layers architecture is presented. At the lower levels, algorithms
+                            run for stabilization and obstacles avoidance; those ensure drone's survival.
+                            Upper layer provides an estimation of orientation over ground and generates a
+                            reference in such a way that ARTVA signal is maximized, while safety for
+                            rescuers is ensured. Highest layers are reserved for searching routines.
+                            It is well known that pinpointing a victim - due to the particular shape
+                            of near-field transmitting source - using ARTVA signal is a difficult task.
+                            In this paper we present a  way for searching buried victims that differs
+                            from the one presented in literature, in which two routines works together
+                            in order to find the field origin. The first routine exploits gradient
+                            information to reach the highest signal strength location, while the second
+                            tries to identify a confidence region through an internal emulation of
+                            the field (optimization problem).
+                          </p>
+                          <p>
+                            When no beacons are detected the agent behavior changes and a search over
+                            a wider region is performed. So far, boundaries for the region are provided
+                            by an external agent, such as a rescuer. The switching between the two
+                            intent - i.e. scanning vs. active searching - is operated by an implementation
+                            of the radar detection algorithm.
+                          </p>
+                        </div>
+                        </details>
+                    </div><!--//details-->
+                </div><!--//item-->
+
+                <div class="item">
+                    <div class="meta">
+                        <div class="upper-row">
+                            <h3 class="job-title">Milling part-program pre-processing for <br>
+                                                  jerk-limited, minimum-time toolpaths based<br>
+                                                  on optimal control theory</h3>
+                            <div class="time">2015</div>
+                        </div><!--//upper-row-->
+                        <div class="company">Paolo Bosetti, Matteo Ragni <br>
+                          IEEJ SAMCON - International Workshop on Sensing, Action and Motion Control</div>
+                    </div><!--//meta-->
+                      <div class="details abstract">
+                        <details>
+                          <summary>Read Abstract</summary>
+                          <div class="summary-wrapper">
+                          <p>
+                            <b>Reduced version of the work presented in IEEJ Journal of Industry Applications</b>
+                          </p>
+                          <p>
+                            The key task performed by CNCs is the generation of the time sequence of set points for driving
+                            each physical axis of the machine tool during program execution. This interpolation of axes
+                            movement must satisfy a number of constraints on axes dynamics (velocity, acceleration, and jerk),
+                            and on process outcome (smooth tool movement and precise tracking of the nominal tool path at
+                            the desired feed rate). This paper presents an algorithm that aims at solving the axes
+                            interpolation problem by exploiting an optimal control problem formulation. Unlike other
+                            solutions proposed in the literature, the approach presented here employs an original approach
+                            by assuming a predefined path tracking tolerance—to be added to the constraints listed earlier—and
+                            calculating the entire trajectory (path and feed rate profile) that satisfies the given constraints.
+                          </p>
+                          <p>
+                            The proposed solution is used for preprocessing a milling part program and redefining the sequence
+                            of positioning commands to cope with the solution of the OC problem. The new part program is then
+                            executed by a state-of-the-art industrial CNC, and the effectiveness in reducing execution time
+                            and axes accelerations is experimentally tested and reported.
+                          </p>
+                        </div>
+                        </details>
+                    </div><!--//details-->
+                </div><!--//item-->
+
+            </section>
+
+            <section class="skills-section section">
+                <h2 class="section-title" id="skills"><i class="fa fa-rocket"></i>Skills &amp; Proficiency</h2>
+                <div class="skillset">
+                    <div class="item">
+                        <h3 class="level-title">Programming</h3>
+                        <div class="level-bar">
+                            <div class="level-bar-inner" data-level="100%">
+                            </div>
+                        </div><!--//level-bar-->
+                    </div><!--//item-->
+
+                    <div class="item">
+                        <h3 class="level-title">Artificial Intelligence</h3>
+                        <div class="level-bar">
+                            <div class="level-bar-inner" data-level="85%">
+                            </div>
+                        </div><!--//level-bar-->
+                    </div><!--//item-->
+
+                    <div class="item">
+                        <h3 class="level-title">Numerical Optimization</h3>
+                        <div class="level-bar">
+                            <div class="level-bar-inner" data-level="80%">
+                            </div>
+                        </div><!--//level-bar-->
+                    </div><!--//item-->
+
+                    <div class="item">
+                        <h3 class="level-title">Control Theory</h3>
+                        <div class="level-bar">
+                            <div class="level-bar-inner" data-level="70%">
+                            </div>
+                        </div><!--//level-bar-->
+                    </div><!--//item-->
+
+                    <div class="item">
+                        <h3 class="level-title">Materials</h3>
+                        <div class="level-bar">
+                            <div class="level-bar-inner" data-level="50%">
+                            </div>
+                        </div><!--//level-bar-->
+                    </div><!--//item-->
+
+                    <div class="item">
+                        <h3 class="level-title">Manufacturing</h3>
+                        <div class="level-bar">
+                            <div class="level-bar-inner" data-level="70%">
+                            </div>
+                        </div><!--//level-bar-->
+                    </div><!--//item-->
+
+                </div>
+            </section><!--//skills-section-->
+
+            <section class="skills-section section">
+                <h2 class="section-title" id="contact"><i class="fa fa-envelope"></i>Contact Me</h2>
+                <div class="spacer"> </div>
+                <div class="item">
+                  <div class="form-group">
+                    <input type="text" name="mail" required="required"/>
+                    <label class="control-label" for="input">Your contact</label><i class="bar"></i>
+                  </div>
+                  <div class="form-group">
+                    <input type="text" name="subject" required="required"/>
+                    <label class="control-label" for="input">Subject</label><i class="bar"></i>
+                  </div>
+                  <div class="form-group">
+                    <textarea required="required" name="message" rows="3"></textarea>
+                    <label class="control-label" for="textarea">Write your message here</label><i class="bar"></i>
+                  </div>
+                  <div class="button-container">
+                    <button class="button" id="submit" type="button"><span>Submit</span></button>
+                  </div>
+                </div>
+            </section>
+        </div><!--//main-body-->
     </div>
-    <!-- end ALPHA -->
-    <div class="error">404</div>
 
-    <!--
-      ___         _      _
-     / __| __ _ _(_)_ __| |_ ___
-     \__ \/ _| '_| | '_ \  _(_-<
-     |___/\__|_| |_| .__/\__/__/
-                   |_|
-    -->
-    <script
-      src="https://code.jquery.com/jquery-2.2.4.min.js"
-      integrity="sha256-BbhdlvQf/xTY9gja0Dq3HiwQF8LaCRTXxZKRutelT44="
-      crossorigin="anonymous">
-    </script>
-    <script src="js/jquery.particleground.min.js"></script>
-    <script src="js/main.js"></script>
-    <script src="http://noisyblue.com/scripts/wow.min.js"></script>
-  </body>
+    <!-- Javascript -->
+    <script type="text/javascript" src="assets/plugins/jquery-1.11.3.min.js"></script>
+    <script type="text/javascript" src="assets/plugins/jquery.details.js"></script>
+    <script type="text/javascript" src="assets/plugins/bootstrap/js/bootstrap.min.js"></script>
+    <!-- custom js -->
+    <script type="text/javascript" src="assets/js/main.js"></script>
+</body>
 </html>
