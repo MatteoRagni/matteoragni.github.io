@@ -526,17 +526,18 @@
                 <h2 class="section-title" id="contact"><i class="fa fa-envelope"></i>Contact Me</h2>
                 <div class="spacer"> </div>
                 <div class="item">
-                  <div class="form-group">
+                  <div class="form-group mail-input">
                     <input type="text" name="mail" required="required"/>
                     <label class="control-label" for="input">Your contact</label><i class="bar"></i>
                   </div>
-                  <div class="form-group">
+                  <div class="form-group subject-input">
                     <input type="text" name="subject" required="required"/>
                     <label class="control-label" for="input">Subject</label><i class="bar"></i>
                   </div>
-                  <div class="form-group">
-                    <textarea required="required" name="message" rows="3"></textarea>
-                    <label class="control-label" for="textarea">Write your message here</label><i class="bar"></i>
+                  <div class="form-group message-input">
+                    <textarea required="required" name="message" rows="3" maxlength="2000"></textarea>
+                    <label class="control-label" for="textarea">Write your message here
+                    (<span id="message-length"></span> chars left)</label><i class="bar"></i>
                   </div>
                   <div class="button-container">
                     <button class="button" id="submit" type="button"><span>Submit</span></button>
@@ -551,6 +552,7 @@
     <script type="text/javascript" src="assets/plugins/jquery.details.js"></script>
     <script type="text/javascript" src="assets/plugins/bootstrap/js/bootstrap.min.js"></script>
     <!-- custom js -->
+    <script type="text/javascript" src="assets/js/contact.js"></script>
     <script type="text/javascript" src="assets/js/main.js"></script>
 </body>
 </html>
