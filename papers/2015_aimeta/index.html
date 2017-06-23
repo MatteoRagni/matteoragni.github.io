@@ -1,0 +1,167 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <meta http-equiv="Content-Style-Type" content="text/css" />
+  <meta name="generator" content="pandoc" />
+  <meta name="author" content="Matteo Ragni" />
+  <title>Avionic Perception—Action Model for UAV Aimed at Avalanche Buried Searching</title>
+  <style type="text/css">code{white-space: pre;}</style>
+  <link href="https://fonts.googleapis.com/css?family=Lato:300,400|Roboto+Slab" rel="stylesheet">
+  <link rel="stylesheet" href="../style.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML" type="text/javascript"></script>
+</head>
+<body>
+<div id="header">
+<h1 class="title">Avionic Perception—Action Model for UAV Aimed at Avalanche Buried Searching</h1>
+<h2 class="author">Matteo Ragni</h2>
+</div>
+<div id="abstract">
+<h4>Abstract</h4>
+<p>Starting from the basic paradigm of perception–action, an avionic system for an UAV aimed at
+avalanche rescue is derived as autonomous agent. Using last advances in cognitive science, situatedness and
+embodiment for the agent are analyzed, and exploited to reach the mission goal. Part
+of the searching algorithm is introduced as one of the complex behaviors in which the agent must
+decide between different intents.</p>
+<p>A stacked layers architecture is presented. At the lower levels, algorithms run for stabilization
+ and obstacles avoidance; those ensure drone’s survival. Upper layer provides an estimation of
+orientation over ground and generates a reference in such a way that ARTVA signal is maximized,
+while safety for rescuers is ensured. Highest layers are reserved for searching routines. It is
+well known that pinpointing a victim – due to the particular shape of near-field transmitting source
+– using ARTVA signal is a difficult task. In this paper we present a way for searching buried victims
+that differs from the one presented in related works, in which two routines works together in order to find
+the field origin. The first routine exploits gradient information to reach the highest signal strength
+location, while the second tries to identify a confidence region through an internal emulation of the
+field (optimization problem).</p>
+<p>When no beacons are detected the agent behavior changes and a search over a wider region is
+performed. So far, boundaries for the region are provided by an external agent, such as a rescuer.
+The switching between the two intent–i.e. scanning vs. active searching–is operated by an
+implementation of the radar detection algorithm.</p>
+</div>
+<div id="body">
+<h1 id="a-renewed-cognitive-paradigm">A Renewed Cognitive Paradigm</h1>
+<p>The <em>Artificial Intelligence</em> is one of the study fields that has to been inspect in deriving autonomous robots for emergency—response. Create an agent that is able to respond creatively to internal and external stimuli seems to be the key to solve different problems that may be perceived as orthogonal in modern robotics.</p>
+<p>Starting from the ’70, the first formulations and implementations of artificial—intelligence (<span><span><strong>AI</strong></span></span>) provided the idea that a cognitive agent is based on internal representation of external world, using symbols. Action should be based on manipulation of that extrapolated base symbols, in a perception—action model (<span><span><strong>PA</strong></span></span>). From the debate introduced by this vision, cognitive science diverged in more interpretations <span class="citation">(Van Gelder 1995; Beer 2003)</span>: computational (based on symbols), dynamical (founded upon the idea that intelligence is also in state evolution of a dynamical system) and connectivism (that led to neural networks theory).</p>
+<p>In the latter year, with an increment of computational power, the fusion of those implementations is considered the way to follow in definition of an intelligent agent.</p>
+<p>[fig:emb_sit] <img src="images/image_1.png" title="fig:" alt="Embodiment and situatedness" /></p>
+<h2 id="expanding-pa">Expanding <span><span><strong>PA</strong></span></span></h2>
+<p>Apart the basic behavior, the advantages of <span><span><strong>PA</strong></span></span> maps are related to the implementation of extremely complex behavior using other techniques such as:</p>
+<ul>
+<li><p>subsumption and grounding <span class="citation">(Harnad 1990)</span> (implementation of embodiment of the agent as a stacked architecture in which each layer perform different operation with different priorities)</p></li>
+<li><p>innate knowledge <span class="citation">(Da Lio et al. To Be Published)</span> (or internal emulation of external environment)</p></li>
+<li><p>bootstrapping, historical and shared knowledge <span class="citation">(Sun, Merrill, and Peterson 2001; Shevchenko, Windridge, and Kittler 2009; Windridge, Felsberg, and Shaukat 2013)</span> (a complete cognitive system should be able to identify and define its motion primitives, exploring the motion domain through the use of fuzzy and random inputs).</p></li>
+</ul>
+<p>[fig:complex_pa] <img src="images/image_2.png" title="fig:" alt="A more complex overview of an agent" /></p>
+<h2 id="pain-rescue-robots"><span><span><strong>PA</strong></span></span> in Rescue Robots</h2>
+<p>Defined in such a way, <span><span><strong>PA</strong></span></span> covers some of the key aspects of autonomous robots in general, that are fundamental for robot that operates in rescue operations:</p>
+<ul>
+<li><p>sensor fusion for autonomous navigation</p></li>
+<li><p>path planning and guidance</p></li>
+<li><p>raise selective criteria in achieving specific tasks</p></li>
+</ul>
+<p>With the common implementation for subsumption and grounding, that we have already introduced, multiple task are organized under a policy fixed into the architecture implementation. Variation of operational policies may be achieved, thought, using weight that shall be assigned to each level of the layer.</p>
+<p>Further refinement, proposed with implementation of our agent, is the multidimensional organization of such architecture, in order to achieve not only competitive policies, but also chained policies, in which the same objective could be reached as a collaboration of multiple algorithm that acts differently in function of the actual perceived environment. This idea grants an easy way to introduce history of perceived environment.</p>
+<h1 id="avionic-model">Avionic Model</h1>
+<p>In this section a general overview of the avionic model of a rescue agent in avalanche environment is presented, in a form of a <span><span><strong>PA</strong></span></span> map, that differs from what already presented in literature <span class="citation">(Piniés and Tardós 2006; Piniés, Tardós, and Neira 2006; Manuel Grauwiler 2010)</span>. A visual representation for such a map is in figure [fig:genPAmap].</p>
+<div class="figure">
+<img src="images/image_3.png" alt="General Perception–Action map for our drone" />
+<p class="caption">General Perception–Action map for our drone<span data-label="fig:genPAmap"></span></p>
+</div>
+<h2 id="dynamic-control-and-tracking-problem">Dynamic, Control and Tracking Problem</h2>
+<p>The dynamic of the VTOL is an important part of the whole system. Control theory should be used to stabilize the drone flight as first and most important policy. In such a block also tracking and fail safe routine should be implemented. Given as base architecture an hexacopter, due to balancing of characteristics such as weight (constrained by rescue operator requirements) and control thrust (necessary in mountain flight), commercial control board already implement control loop for stabilization, tracking and some failsafe algorithm. One of the advantage of our <span><span><strong>PA</strong></span></span> is the capability to be injected in such commercial board almost transparently.</p>
+<h2 id="obstacle-avoidance">Obstacle Avoidance</h2>
+<p>An avalanche as an huge amount of kinetic energy. Under this assumption, we make the hypothesis that our drone will face as obstacle mainly pillars, trees and mounds of snow. Taken into account this consideration about the surroundings, it is useless to define a complete internal map of obstacles and define an optimal trajectory to avoid them.</p>
+<div class="figure">
+<img src="images/obstavoid_dist.png" alt="Example of obstacle avoidance algorithm behavior" />
+<p class="caption">Example of obstacle avoidance algorithm behavior</p>
+</div>
+<p>The basic idea is to generate a run-away control action on the center of mass of the vehicle when it senses an obstacle close to its position. This control action will be summed up to the control action of the lower layers. From a more theoretical point of view, we are exploiting the idea of gradient of Voronoi map of the environment <span class="citation">(Choset and Burdick 2000)</span>, evaluated only locally. This simplification gather different advantage to the final algorithm:</p>
+<ul>
+<li><p>we do not need high computational power and memory required to project symbol of surroundings into agent <em>mind space</em>, that means that algorithm fits hardware specification</p></li>
+<li><p>obstacle avoidance imposes minor constraints on upper layers of searching algorithms, with respect convoluted algorithms.</p></li>
+<li><p>more reliable routine with respect Bayesian based maps, because of its local deterministic nature</p></li>
+</ul>
+<p>while the main drawbacks are:</p>
+<ul>
+<li><p>moving on an non-optimal path</p></li>
+<li><p>it is based on simplification, and real life is always harder than what we aspect</p></li>
+</ul>
+<h2 id="haal">HAAL</h2>
+<p>HAAL (height above average terrain) algorithm should be implemented considering that distance of the drone to the soil must be high enough to avoid contact with rescuers and low enough to get the best possible signal strength. With respect to obstacle avoidance, that acts as a control on the lateral dynamic, that is quite slow, altitude keeping acts on vertical dynamic that is really fast, and need a more reliable implementation.</p>
+<p>A statistical perception, based upon knowledge of the orientation state of the drone (SLAM problem), grant the ability to identify the characteristic vector of the mean plane of surface. Once this vector is identified, a constant distance (e.g. <span class="math inline">\(4\)</span> m) shall be maintained.</p>
+<div class="figure">
+<img src="images/altitude_keep.png" alt="Altitude keeping problem" />
+<p class="caption">Altitude keeping problem</p>
+</div>
+<h1 id="pinpointing-the-victim">Pinpointing the Victim</h1>
+<p>In the next section, block that are derived to pinpoint a victims are explained. With those block we introduce the multidimensional implementation of the upper <span><span><strong>PA</strong></span></span> map.</p>
+<p>To pinpoint a victim we change the structure of the common grounded map. Using a representation of perceived environment (emulation), we try to reach two parallel goals: identify a signal and pinpoint to the source of such signal. The drone should be able not only to pinpoint the victim as fast as possible (searching maximum signal), but also to apprehend the actual position of the victim. In fact an ARTVA transmitter is perceived from a good quality receiver in a range of <span class="math inline">\(\sim40\)</span> m <span class="citation">(300 2001; Hereford and Edgerly 2000)</span>.</p>
+<p>[fig:planeecplanation] <img src="images/image_4.png" alt="image" /></p>
+<h2 id="radar-detection">Radar Detection</h2>
+<p>Under the hypothesis of victim with ARTVA transmitter <span class="citation">(Italiana 2003)</span>, our drone should carry an ARTVA signal probe. One of the first problem is to identify target signal from background noise: this is a typical <em>supervised signal detection</em> based upon risk criterion: the idea is to <em>minimize the average cost incurred by erroneous decision</em> <span class="citation">(Duda, Hart, and Stork 2012)</span>. The result to be achieved is the transition between two concurrent state: exploration (in figure [fig:complex_pa] on the right) and pinpointing (on the left).</p>
+<h2 id="exploration">Exploration</h2>
+<p>While signal is not detected, we mimic behavior of real rescuer, trying to cover the avalanche front area flying in straight lines, in such a way that a grid is generated. The grid should be completely covered, and it is generated under the assumption that each element is smaller with respect to receiving radius. The grid is figured internally as an array of points localized through GPS, associated with a confidence distance (a sphere in which drone has to fly before reaching the next point). The ability to scope next points is granted by lower levels of the <span><span><strong>PA</strong></span></span> map.</p>
+<p>If ARTVA magnetic field is identified, <span><strong>radar</strong></span> routines change detection state in order to actually pinpoint the position of the victim.</p>
+<h2 id="maximization-of-perception-and-location-identification">Maximization of Perception and Location Identification</h2>
+<p>The actual search, once magnetic field is sensed, tries to runs towards maximum, with an <em>adaptive filter</em>, that steer the system in direction of the source; intensity of field defines drone speed, with a direction that is adapted from previous perceptions.</p>
+<p>In parallel, an <em>emulation of real field</em> is implemented, as mathematical model of near–field magnetic dipole source <span class="citation">(Ramo, Whinnery, and Van Duzer 2008; Knoepfel 2008)</span>. The emulator tries to understand the position of the source as a <em>solution of an optimization problem</em>, using previous solution as a guess that is adapted through time. Solution of successive optimization routine generates a vector of position.</p>
+<p>Saved position are used to estimate actual position of buried victim (<em>Parzen window estimator</em>), that gives us the location within a certain field of confidence. When drone is in such a confidence area, it releases the dart to signal the position to rescuers.</p>
+<h1 id="simulation">Simulation</h1>
+<p>Active searching component of the map was developed and simulated in a simplified representation of the environment. An example of a simulation run, projected on <span class="math inline">\(\hat{x} \times \hat{y}\)</span> plane, is presented in figure [fig:simulation].</p>
+<p><img src="images/ParzenWindow.png" alt="image" style="width:70.0%" /> [fig:simulation]</p>
+<div id="refs" class="references">
+<div id="ref-NormativaARVA">
+<p>300, ETSI EN. 2001. <em>E.R.M. Avalanche Beacons - Transmitter-Receiver Systems</em>. ETSI.</p>
+</div>
+<div id="ref-beer2003">
+<p>Beer, Randall D. 2003. “The Dynamics of Active Categorical Perception in an Evolved Model Agent.” <em>Adaptive Behavior</em> 11 (4). Sage Publications: 209–43.</p>
+</div>
+<div id="ref-sage2000">
+<p>Choset, Howie, and Joel Burdick. 2000. “Sensor-Based Exploration: The Hierarchical Generalized Voronoi Graph.” <em>The International Journal of Robotics Research</em> 19 (2). SAGE Publications: 96–125.</p>
+</div>
+<div id="ref-dalio2013">
+<p>Da Lio, M., F. Biral, E. Bertolazzi, M. Galvani, P. Bosetti, D. Windridge, A. Saroldi, and F. Tango. To Be Published. “Artificial Co-Driver as a Universal Enabling Technology for Future Intelligent Vehicles and Transportation Systems.” <em>Transaction on Intelligent Transportation Systems</em>. IEEE.</p>
+</div>
+<div id="ref-duda2012">
+<p>Duda, Richard O., Peter E. Hart, and David G. Stork. 2012. <em>Pattern Classification</em>. John Wiley &amp; Sons.</p>
+</div>
+<div id="ref-harnad1990">
+<p>Harnad, Stevan. 1990. “The Symbol Grounding Problem.” <em>Physica D: Nonlinear Phenomena</em> 42 (1). Elsevier: 335–46.</p>
+</div>
+<div id="ref-hereford2000">
+<p>Hereford, J., and B. Edgerly. 2000. “457 Khz Electromagnetism and the Future of Avalanche Transceivers.” <em>BackCountry Access</em>.</p>
+</div>
+<div id="ref-ARTVAobbligationLaw">
+<p>Italiana, Repubblica. 2003. “Legge 24/12/2003 N. 363.” <em>Gazzetta Ufficiale</em>.</p>
+</div>
+<div id="ref-knopfel2008magnetic">
+<p>Knoepfel, Heinz E. 2008. <em>Magnetic Fields: A Comprehensive Theoretical Treatise for Practical Use</em>. John Wiley &amp; Sons.</p>
+</div>
+<div id="ref-projectAlcedoZurigo">
+<p>Manuel Grauwiler, Luc Oth. 2010. <em>Fully Autonomous Search for Avalanche Victims Using an Mav</em>. Eidgenössische Technische Hochschule Zürich.</p>
+</div>
+<div id="ref-pines2006fast">
+<p>Piniés, P., and J. D. Tardós. 2006. “Fast Localization of Avalanche Victims Using Sum of Gaussians.” In <em>Proceedings of Ieee International Conference on Robotics and Automation</em>, 3989–94. IEEE.</p>
+</div>
+<div id="ref-pines2006localization">
+<p>Piniés, P., J. D. Tardós, and J. Neira. 2006. “Localization of Avalanche Victims Using Robocentric Slam.” In <em>IEEE/Rsj International Conference on Intelligent Robots and Systems</em>, 3074–9. IEEE.</p>
+</div>
+<div id="ref-ramo2008fields">
+<p>Ramo, Simon, John R. Whinnery, and Theodore Van Duzer. 2008. <em>Fields and Waves in Communication Electronics</em>. John Wiley &amp; Sons.</p>
+</div>
+<div id="ref-shevchenko2009">
+<p>Shevchenko, M., D. Windridge, and J. Kittler. 2009. “A Linear-Complexity Reparameterisation Strategy for the Hierarchical Bootstrapping of Capabilities Within Perception–action Architectures.” <em>Image and Vision Computing</em> 27 (11). Elsevier: 1702–14.</p>
+</div>
+<div id="ref-sun2001">
+<p>Sun, R., E. Merrill, and T. Peterson. 2001. “From Implicit Skills to Explicit Knowledge: A Bottom-up Model of Skill Learning.” <em>Cognitive Science</em> 25 (2). Elsevier: 203–44.</p>
+</div>
+<div id="ref-vangelder1995">
+<p>Van Gelder, T. 1995. “What Might Cognition Be, If Not Computation?” <em>The Journal of Philosophy</em> 92 (7). JSTOR: 345–81.</p>
+</div>
+<div id="ref-windridge2013">
+<p>Windridge, D., M. Felsberg, and A. Shaukat. 2013. “A Framework for Hierarchical Perception–Action Learning Utilizing Fuzzy Reasoning.” <em>IEEE Transactions on Cybernetics</em> 43 (1). IEEE: 155–69.</p>
+</div>
+</div>
+</div>
+</body>
+</html>

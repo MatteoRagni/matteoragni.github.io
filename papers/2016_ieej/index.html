@@ -1,0 +1,484 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <meta http-equiv="Content-Style-Type" content="text/css" />
+  <meta name="generator" content="pandoc" />
+  <meta name="author" content="Paolo Bosetti, Matteo Ragni" />
+  <title>Milling Part Program Preprocessing for Jerk-limited, Minimum-time Tool Paths Based on Optimal Control Theory</title>
+  <style type="text/css">code{white-space: pre;}</style>
+  <link href="https://fonts.googleapis.com/css?family=Lato:300,400|Roboto+Slab|Fira+Mono" rel="stylesheet">
+  <link rel="stylesheet" href="../style.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML" type="text/javascript"></script>
+</head>
+<body>
+<div id="header">
+<h1 class="title">Milling Part Program Preprocessing for Jerk-limited, Minimum-time Tool Paths Based on Optimal Control Theory</h1>
+<h2 class="author">Paolo Bosetti, Matteo Ragni</h2>
+</div>
+<div id="abstract">
+<h4>Abstract</h4>
+<p>The key task performed by CNCs is the generation of the time sequence of set points for driving each physical
+axis of the machine tool during program execution. This interpolation of axes movement must satisfy a number of
+constraints on axes dynamics (velocity, acceleration, and jerk), and on process outcome (smooth tool movement
+and precise tracking of the nominal tool path at the desired feed rate). This paper presents an algorithm that
+aims at solving the axes interpolation problem by exploiting an optimal control problem formulation. Unlike
+other solutions proposed in the literature, the approach presented here employs an original approach by assuming
+a predefined path tracking tolerance-to be added to the constraints listed earlier-and calculating the entire
+trajectory (path and feed rate profile) that satisfies the given constraints.</p>
+<p>The proposed solution is used for preprocessing a milling part program and redefining the sequence of positioning
+commands to cope with the solution of the OC problem. The new part program is then executed by a state-of-the-art
+industrial CNC, and the effectiveness in reducing execution time and axes accelerations is experimentally tested
+and reported.</p>
+</div>
+<div id="body">
+<h1 id="sec:introduction">Introduction</h1>
+<p>Performance of machine tools depends on the algorithms that the Computer Numerical Control (CNC) implements for calculating feed rate profiles. This performance impacts both the accuracy of the tool movements (path tracking), and the efficiency in terms of process time (or average tool speed) <span class="citation"></span>.</p>
+<p>Modern CNC systems are based on <em>acceleration/deceleration control before interpolation</em>. This is a software implementation, where the feed rate profiles (i.e. profiles of tangential speed) are generated before executing the motion interpolation on individual machine tool axes. Path tracking error for these CNC systems is theoretically limited by the performance of axes drivers, provided that the feed rate profiles are generated within the velocity, acceleration, and jerk feasibility limits for each axis.</p>
+<p>A relatively open issue, though, remains when considering the cornering performance. Any sharp corner along the tool path represents a point of discontinuity in the velocity vector, so that the only physically feasible trajectory along the tool path must get to a full stop in the corners. For tool paths made by a succession of short segments, though, this approach greatly reduces the average feed rate compared to its nominal (or programmed) value.</p>
+<p>This issue has been partially addressed by CNC manufacturers by allowing the CNC programmer to relax the path-following tolerance thus sacrificing the accuracy in favor of speed. It is the case of <span><code>G61</code></span> (exact path mode) and <span><code>G64</code></span> (continuous mode) G-code instructions <span class="citation"></span><span class="citation"></span>, where the former requires an accurate positioning at nodes by forcing a full stop, whether the latter enable higher average speed by allowing some limited tracking error during the acceleration/deceleration phases at the expense of tracking accuracy and thanks to the look-ahead approach <span class="citation"></span><span class="citation"></span>.</p>
+<p>It has been shown that these solutions provide non-optimal trajectories both in terms of path tracking error, and in terms of minimum time <span class="citation"></span>. In fact, the calculation of the feed rate profile is performed by assuming that the maximum allowed tangential acceleration is that of the slowest axis, so that the part program can be executed with comparable results whichever is the orientation of the workpiece to be machined with respect to the machine tool axes—and this is by definition, since the feed rate profiles are calculated <em>before interpolation</em>.</p>
+<p>Consequently, it is interesting to investigate the possibility to improve the machine tool performance by designing more advanced algorithms for feed rate profiling. Recent literature reports a number of works in manufacturing and in robotics field, proposing algorithms for motion interpolation of multiple axes aiming at improving time efficiency and path tracking accuracy. A comprehensive literature review on this subject has been proposed by Refs. <span class="citation"></span>.</p>
+<p>It is worth noting that most of the available literature deals with minimum-time feedrate profiles generated for a pre-defined tool path (i.e. admitting zero path tracking error). Clever solutions have also been proposed on this matter <span class="citation"></span> that <em>do not explicitly relate the path tracking accuracy to optimization parameters</em>. In other words, the approach followed in these works is to calculate the optimal velocity profile satisfying a given set of limits, jerk included, assuming that the nominal tool path is the reference, but <em>without</em> enabling the perspective user to explicitly set a limit or constraint on the maximum allowable path tracking error, which is actually <em>what really matters from the product quality</em> point-of-view.</p>
+<p>In a recent work<span class="citation"></span> the Authors adopted a different approach, where the whole trajectory is optimized, rather than the sole feed rate profile. This choice allows to define a lateral tolerance on the tool path—which can be physically related to the workpiece design tolerance. On this basis, the formulation of an optimal control problem (OCP) minimizing the time and yet respecting constraints on maximum jerks and accelerations, proved effective in comparison to the execution time for part programs run on standard CNCs.</p>
+<p>Moving from this OCP application, the present work recalls the theory behind it and then shows how the optimized trajectory (i.e. the tool path together with the speed profile) can be used for preprocessing the original part program and generating a modified one, made by a sequence of short straight segments, whose track is a discretization of the optimized tool path, and whose feed rate are set to copy the optimized speed profile. The effectiveness of this approach is evaluated by comparing the cycle-time and the acceleration profiles of a reference part program with those of its optimized version.</p>
+<h1 id="sec:optimal_control_formulation">Optimal Control Formulation</h1>
+<h2 id="sub:system_dynamics">Model of System Dynamics</h2>
+<p>Taking as a reference the sketch in Fig. [fig:ref_frame], when <span class="math inline">\(s\)</span> is the arc length, or curvilinear abscissa, the nominal trajectory can be described as a continuos function of <span class="math inline">\(s\)</span>: <span class="math display">\[\begin{aligned}
+\label{eq:PN}
+  {{\boldsymbol{P}}_n}(s) = {\begin{pmatrix} x_n(s) \\ y_n(s) \end{pmatrix}}\qquad
+  \textrm{for $0\leq s \leq L$}\end{aligned}\]</span> with piecewise continuos derivative. The derivative of the nominal trajectory <span class="math inline">\({{\boldsymbol{P}}_n}(s)\)</span> is discontinuous on a finite number of points, corresponding to arc lengths <span class="math inline">\(0&lt;s_1&lt;s_2&lt;\cdots&lt;s_{m-1}&lt;L\)</span>, where <span class="math inline">\(L\)</span> is the total cluster length and <span class="math inline">\(m\)</span> is the number of blocks in the cluster. Being <span class="math inline">\({\left\Vert{{\boldsymbol{P}}_n}&#39;(s)\right\Vert}=1\)</span>, it is possible to define <span class="math inline">\(\theta_n(s)\)</span>, the angle of the nominal trajectory, as the angle that satisfies: <span class="math display">\[\begin{aligned}
+  {{\boldsymbol{P}}_n}&#39;(s) &amp;= {\begin{pmatrix} x_n&#39;(s) \\ y_n&#39;(s) \end{pmatrix}}
+           = {\begin{pmatrix} \cos\theta_n(s) \\ \sin\theta_n(s) \end{pmatrix}},\end{aligned}\]</span> whenever <span class="math inline">\(s\neq s_k\)</span>. Note that here and in the following the prime notation is used for space derivative, while the dot notation is used for the time derivative. The directions tangent and normal to the nominal trajectory are, respectively: <span class="math display">\[\begin{aligned}
+  {{\boldsymbol{T}}}(\theta_n) &amp;= {\begin{pmatrix} \cos\theta_n \\ \sin\theta_n \end{pmatrix}},
+  \qquad
+  {{\boldsymbol{N}}}(\theta_n) &amp;= {\begin{pmatrix} -\sin\theta_n \\ \cos\theta_n \end{pmatrix}}.\end{aligned}\]</span></p>
+<div class="figure">
+<img src="images/ref_frame.png" alt="Local coordinate frame used for formulating the optimal control problem" />
+<p class="caption">Local coordinate frame used for formulating the optimal control problem<span data-label="fig:ref_frame"></span></p>
+</div>
+<p>On the basis of the vector <span class="math inline">\({{\boldsymbol{N}}}(\theta_n)\)</span>, and of the nominal trajectory <span class="math inline">\({{\boldsymbol{P}}_n}(s)\)</span>, one can define a curvilinear coordinate system, where a point <span class="math inline">\({{\boldsymbol{P}}}\)</span> has the curvilinear coordinates <span class="math inline">\((s,n)\)</span> when <span class="math inline">\({{\boldsymbol{P}}}\equiv {{\boldsymbol{P}}_n}(s)+n{{\boldsymbol{N}}}(\theta_n)\)</span>.</p>
+<p>In this curvilinear coordinate system the tool center position can be described as: <span class="math display">\[\begin{aligned}
+  {{\boldsymbol{P}}}(t) = {{\boldsymbol{P}}_n}(s)+n{{\boldsymbol{N}}}(\theta_n),\qquad
+  \begin{aligned}\label{eq:P}
+    &amp; \textrm{with} &amp;&amp; s\equiv s(t)\\
+    &amp; \textrm{and}  &amp;&amp; n\equiv n(t)\\
+    &amp; \textrm{and}  &amp;&amp; \theta_n\equiv\theta_n(s(t)).
+  \end{aligned}\end{aligned}\]</span></p>
+<p>Notice that, in order of having an univocal definition for <span class="math inline">\({{\boldsymbol{P}}}(t_k)\)</span> and due to the possible discontinuity in the derivative of nominal trajectory at nodal points, the curvilinear coordinate <span class="math inline">\(n(t)\)</span> must be <span class="math inline">\(0\)</span> for <span class="math inline">\(t=t_k\)</span>, where <span class="math inline">\(s(t_k)=s_k\)</span>. This implies that the tool center position is forced to cross the nominal trajectory at nodal points <span class="math inline">\({{\boldsymbol{P}}}(t_k)\)</span>. Along this path, the tool velocity <span class="math inline">\({{\boldsymbol{V}}}(t)=\dot{{\boldsymbol{P}}}(t)\)</span> can thus be expressed as: <span class="math display">\[\begin{aligned}
+  {{\boldsymbol{V}}}(t) =
+  {{\boldsymbol{T}}}(\theta_n)(1-n\kappa)\dot s + {{\boldsymbol{N}}}(\theta_n)\dot n,
+  \quad \kappa(s)=\theta_n&#39;(s)\end{aligned}\]</span> where <span class="math inline">\(\kappa(s)\)</span> is the curvature of the nominal trajectory.</p>
+<p>The projections of the velocity vector in the local curvilinear reference frame, according to Fig. [fig:ref_frame], can be thus expressed as: <span class="math display">\[\begin{aligned}
+\label{eq:pos}
+  \begin{aligned}
+    v_s(t) &amp;= {{\boldsymbol{V}}}(t)\cdot{{\boldsymbol{T}}}(s)\,  = (1-n\kappa)\dot s,\\
+    v_n(t) &amp;= {{\boldsymbol{V}}}(t)\cdot{{\boldsymbol{N}}}(s)   = \dot n,
+  \end{aligned}\end{aligned}\]</span> and the velocity vector itself can be rewritten as: <span class="math display">\[\begin{aligned}
+\label{eq:V}
+  {{\boldsymbol{V}}}(t) =
+  {{\boldsymbol{T}}}(\theta_n)v_s + {{\boldsymbol{N}}}(\theta_n)v_n.\end{aligned}\]</span> Analogously, the acceleration <span class="math inline">\({{\boldsymbol{A}}}(t)=\dot {{\boldsymbol{V}}}(t)\)</span> can be expressed as: <span class="math display">\[\begin{aligned}
+  {{\boldsymbol{A}}}(t)
+  =
+  {{\boldsymbol{T}}}(\theta_n)(\dot v_s-\kappa v_n \dot s) +
+  {{\boldsymbol{N}}}(\theta_n)(\dot v_n+\kappa v_s \dot s),
+  \quad\end{aligned}\]</span> and using again the local projections in the curvilinear reference frame: <span class="math display">\[\begin{aligned}
+\label{eq:vel}
+  \begin{aligned}
+    a_s(t) &amp;= {{\boldsymbol{A}}}(t)\cdot{{\boldsymbol{T}}}(s)  = \dot v_s - \kappa \dot v_n s, \\
+    a_n(t) &amp;= {{\boldsymbol{A}}}(t)\cdot{{\boldsymbol{N}}}(s) = \dot v_n + \kappa \dot v_s s, \\
+    {{\boldsymbol{A}}}(t) &amp;=
+    {{\boldsymbol{T}}}(\theta_n)a_s + {{\boldsymbol{N}}}(\theta_n)a_n.
+  \end{aligned}\end{aligned}\]</span> Finally, the jerk <span class="math inline">\({{\boldsymbol{J}}}(t)=\dot {{\boldsymbol{A}}}(t)\)</span> can be expressed as: <span class="math display">\[\begin{aligned}
+  {{\boldsymbol{J}}}(t) =
+  {{\boldsymbol{T}}}(\theta_n) (\dot a_s - \kappa a_n \dot s) +
+  {{\boldsymbol{N}}}(\theta_n)(\dot a_n + \kappa a_s \dot s),\quad\end{aligned}\]</span> and, by using again the local projections in the curvilinear reference frame: <span class="math display">\[\begin{aligned}
+\label{eq:acc}
+  \begin{aligned}
+    j_s(t) &amp;= {{\boldsymbol{J}}}(t)\cdot{{\boldsymbol{T}}}(s)  = \dot a_s - \kappa v_s \dot s,\\
+    j_n(t) &amp;= {{\boldsymbol{J}}}(t)\cdot{{\boldsymbol{N}}}(s) = \dot a_n + \kappa v_s \dot s, \\
+    {{\boldsymbol{J}}}(t) &amp;=
+    {{\boldsymbol{T}}}(\theta_n)j_s + {{\boldsymbol{N}}}(\theta_n)j_n
+  \end{aligned}\end{aligned}\]</span> By combining Eqs. [eq:pos], [eq:vel], and [eq:acc], one obtains the following system of ordinary differential equations (ODE): <span class="math display">\[\begin{aligned}
+\label{eq:ODE}
+  \begin{aligned}
+    \dot s   &amp;= v_s/(1-\kappa n),     &amp; \quad \dot n   &amp;= v_n, \\
+    \dot v_s &amp;= a_s + \kappa v_n \dot s, &amp; \quad \dot v_n &amp;= a_n - \kappa v_s \dot s, \\
+    \dot a_s &amp;= j_s + \kappa a_n \dot s, &amp; \quad \dot a_n &amp;= j_n - \kappa a_s \dot s
+  \end{aligned}\end{aligned}\]</span> whose solution represents the tool trajectory determined by the jerk history. This ODE is valid wherever <span class="math inline">\(s(t)\neq s_k\)</span>, i.e. except for the discontinuity points of the nominal trajectory. In correspondence with these discontinuity points the actual trajectory <span class="math inline">\({{\boldsymbol{P}}}(t)\)</span> must be continuous: <span class="math display">\[\begin{aligned}
+  {{\boldsymbol{P}}}(t_k^-) = {{\boldsymbol{P}}}(t_k^+),\quad
+  {{\boldsymbol{V}}}(t_k^-) = {{\boldsymbol{V}}}(t_k^+),\quad
+  {{\boldsymbol{A}}}(t_k^-) = {{\boldsymbol{A}}}(t_k^+)\end{aligned}\]</span> where the superscripts <span class="math inline">\(+\)</span> and <span class="math inline">\(-\)</span> represent the quantities on the right (i.e. after) and on the left (i.e. before) side of a node, respectively.</p>
+<p>As a consequence of the continuity equations and of Eq. [eq:P], and by defining <span class="math inline">\(\theta_k^\pm=\theta_n(s(t_k^\pm))\)</span>, it follows that: <span class="math display">\[\begin{aligned}
+  {{\boldsymbol{P}}_n}(s_k)+n(t_k^-){{\boldsymbol{N}}}(\theta_k^-)
+  = {{\boldsymbol{P}}_n}(s_k)+n(t_k^+){{\boldsymbol{N}}}(\theta_k^+),\end{aligned}\]</span> which, unless <span class="math inline">\({{\boldsymbol{N}}}(\theta_k^-)={{\boldsymbol{N}}}(\theta_k^+)\)</span>, implies that: <span class="math display">\[\begin{aligned}
+\label{eq:cont_pos}
+  n(t_k^-)=n(t_k^+)=0\end{aligned}\]</span> i.e. that the tool center passes exactly through the node, as shown in Fig. [fig:ref_frame] (point <span class="math inline">\(s_k\)</span>).</p>
+<p>From Eq. [eq:V], the continuity condition implies that <span class="math display">\[\begin{aligned}
+  \begin{aligned}
+    v_s(t_k^+) =&amp;
+    {{\boldsymbol{T}}}(\theta_k^+)\cdot{{\boldsymbol{T}}}(\theta_k^-)v_s(t_k^-) +
+    {{\boldsymbol{T}}}(\theta_k^+)\cdot{{\boldsymbol{N}}}(\theta_k^-)v_n(t_k^-) \\
+    v_n(t_k^+) =&amp;
+    {{\boldsymbol{N}}}(\theta_k^+)\cdot{{\boldsymbol{T}}}(\theta_k^-)v_s(t_k^-) +
+    {{\boldsymbol{N}}}(\theta_k^+)\cdot{{\boldsymbol{N}}}(\theta_k^-)v_n(t_k^-)
+  \end{aligned}\end{aligned}\]</span> The last pair of equations, by using the formulas <span class="math display">\[\begin{aligned}
+  \begin{aligned}
+    \cos(a-b)&amp;= \cos(a)\cos(b)+\sin(a)\sin(b)\\
+    \sin(a-b)&amp;= -\cos(a)\sin(b)+\sin(a)\cos(b)
+  \end{aligned}\end{aligned}\]</span> and by defining <span class="math inline">\(\Delta\theta_k = \theta_k^+-\theta_k^-\)</span>, can be finally expressed as: <span class="math display">\[\begin{aligned}
+  \begin{aligned}\label{eq:cont_vel}
+    v_s(t_k^+) &amp;= v_s(t_k^-)\cos\Delta\theta_k
+                 + v_n(t_k^-)\sin\Delta\theta_k\,, \\
+    v_n(t_k^+) &amp;= v_n(t_k^-)\cos\Delta\theta_k-
+                  v_s(t_k^-)\sin\Delta\theta_k\,.
+  \end{aligned}\end{aligned}\]</span> After analogous operations, from Eq. [eq:vel] one can obtain the corresponding continuity equations for the two acceleration components: <span class="math display">\[\begin{aligned}
+  \begin{aligned}\label{eq:cont_acc}
+    a_s(t_k^+) &amp;= a_s(t_k^-)\cos\Delta\theta_k
+                 + a_n(t_k^-)\sin\Delta\theta_k\,, \\
+    a_n(t_k^+) &amp;= a_n(t_k^-)\cos\Delta\theta_k-
+                  a_s(t_k^-)\sin\Delta\theta_k\,.
+  \end{aligned}\end{aligned}\]</span></p>
+<h2 id="coordinate-change">Coordinate change</h2>
+<p>The formulation of the tool center position above detailed cannot be used for optimization purposes, for the time at which the tool reaches the discontinuity points <span class="math inline">\(t_k\)</span>—i.e. the times at which <span class="math inline">\(s(t_k)=s_k\)</span>—are not known <em>a priory</em>. To overcome this issue, a coordinate change is here introduced.</p>
+<p>Lets consider a set of segments in the part program, for which the initial and final conditions are known (typically known position at zero speed). Let <span class="math inline">\(L_k\)</span> be the length of the <span class="math inline">\(k\)</span>-th segment of the nominal tool path, and <span class="math inline">\(T_k\)</span> the time spent for traveling from the beginning to the end of this segment. Set also <span class="math inline">\(t_0=0\)</span> and <span class="math inline">\(s(t_{m})=L\)</span>, being <span class="math inline">\(t_{m}=t_f\)</span> the time at the very end of the set of segments, and <span class="math inline">\(m\)</span> is the number segments (being <span class="math inline">\(m-1\)</span> the number of discontinuity points). With these definitions, the coordinate <span class="math inline">\(\zeta\)</span> can be defined as: <span class="math display">\[\begin{aligned}
+\label{eq:chcoor}
+  \zeta &amp;=\zeta(t) = s_{k-1} + (t-t_{k-1})\frac{L_k}{T_k},\qquad
+  t_{k-1} \leq t &lt; t_{k},\end{aligned}\]</span> satisfying <span class="math inline">\(\zeta(t_{k-1})=s_{k-1}\)</span>, and <span class="math inline">\(\zeta(t_k)=s_{k-1}+L_k=s_k\)</span>.</p>
+<div class="figure">
+<img src="images/time_transf.png" alt="Coordinate change" />
+<p class="caption">Coordinate change<span data-label="fig:time_transf"></span></p>
+</div>
+<p>By using <span class="math inline">\(\zeta\)</span> as independent coordinate, the set of ODE in Eq. [eq:ODE] becomes (for <span class="math inline">\(\zeta \in (s_{k-1},s_k)\)</span>): <span class="math display">\[\begin{aligned}
+  \begin{aligned}\label{eq:ODE:zeta}
+    s&#39;(\zeta)   &amp;= \left(\frac{T_k}{L_k}\right)\dfrac{v_s(\zeta)}{1-n(\zeta)\kappa(s(\zeta))}, \\
+    n&#39;(\zeta)   &amp;= (T_k/L_k)\,v_n(\zeta), \\
+    v_s&#39;(\zeta) &amp;= (T_k/L_k)\,a_s(\zeta) + \kappa(s(\zeta))\,v_n(\zeta)\,s&#39;(\zeta),\\
+    v_n&#39;(\zeta) &amp;= (T_k/L_k)\,a_n(\zeta) - \kappa(s(\zeta))\,v_s(\zeta)\,s&#39;(\zeta),\\
+    a_s&#39;(\zeta) &amp;= (T_k/L_k)\,j_s(\zeta) + \kappa(s(\zeta))\,a_n(\zeta)\,s&#39;(\zeta),\\
+    a_n&#39;(\zeta) &amp;= (T_k/L_k)\,j_n(\zeta) - \kappa(s(\zeta))\,a_s(\zeta)\,s&#39;(\zeta)
+  \end{aligned}\end{aligned}\]</span> where the prime operator indicates the first derivative with respect to <span class="math inline">\(\zeta\)</span>. The last set of equations is completed with the initial (i.e. <span class="math inline">\(\zeta=0\)</span>) boundary conditions: <span class="math display">\[\begin{aligned}
+  \begin{aligned}\label{eq:ini:BC}
+     s(0)   &amp;=0,\quad
+    &amp;v_s(0) &amp;=f^-,\quad
+    &amp;a_s(0) &amp;=0, \\
+     n(0)   &amp;=0,\quad
+    &amp;v_n(0) &amp;=0,\quad
+    &amp;a_n(0) &amp;=0,
+  \end{aligned}\end{aligned}\]</span> and with the final (i.e. <span class="math inline">\(\zeta=L\)</span>) boundary conditions: <span class="math display">\[\begin{aligned}
+  \begin{aligned}\label{eq:end:BC}
+    s(L)    &amp;=L,\quad
+    &amp;v_s(L) &amp;=f^+,\quad
+    &amp;a_s(L) &amp;=0, \\
+    n(L)    &amp;=0,\quad
+    &amp;v_n(L) &amp;=0,\quad
+    &amp;a_n(L) &amp;=0,
+  \end{aligned}\end{aligned}\]</span> where <span class="math inline">\(f^-\)</span> and <span class="math inline">\(f^+\)</span> are the feed rate at the <em>beginning</em> and at the <em>end</em> of the set of segments—typically 0.</p>
+<p>Finally, the interface conditions of Eqs. [eq:cont_pos], [eq:cont_vel], and [eq:cont_acc]—after the change of coordinates defined in Eq. [eq:chcoor]—become: <span class="math display">\[\begin{aligned}
+  \begin{aligned}\label{eq:compat}
+    s(s_k^+) &amp;= s(s_k^-) = s_k \\
+    n_s(s_k^+) &amp;= n_s(s_k^-) = 0 \\
+    v_s(s_k^+) &amp;= v_s(s_k^-)\cos\Delta\theta_k
+                + v_n(s_k^-)\sin\Delta\theta_k\,, \\
+    v_n(s_k^+) &amp;= v_n(s_k^-)\cos\Delta\theta_k-
+                  v_s(s_k^-)\sin\Delta\theta_k\,, \\
+    a_s(s_k^+) &amp;= a_s(s_k^-)\cos\Delta\theta_k
+                 + a_n(s_k^-)\sin\Delta\theta_k\,, \\
+    a_n(s_k^+) &amp;= a_n(s_k^-)\cos\Delta\theta_k-
+                  a_s(s_k^-)\sin\Delta\theta_k\,.
+  \end{aligned}\end{aligned}\]</span></p>
+<h2 id="sub:formulation_of_optimal_control_problem">Formulation of the Optimal Control Problem</h2>
+<p>Informally, the Optimal Control Problem (OCP) can be stated as follows: one wants to calculate the continuous trajectory <span class="math inline">\({{\boldsymbol{P}}}(t)={{\boldsymbol{P}}}(s(t),n(t))\)</span>, where <span class="math inline">\({{\boldsymbol{P}}}(s,n)={{\boldsymbol{P}}_n}(s)+n{{\boldsymbol{N}}}(\theta_n(s))\)</span>, which approximates the nominal path <span class="math inline">\({{\boldsymbol{P}}_n}(s)\)</span> given a prescribed tracking tolerance and by moving as close as possible to the nominal feed rate <span class="math inline">\(f(s)\)</span>, which in turn is a piecewise constant function representing the nominal feed rate for each positioning block in the part program.</p>
+<p>Since the <em>path tracking error</em>, which is the distance between <span class="math inline">\({{\boldsymbol{P}}_n}(s)\)</span> and <span class="math inline">\({{\boldsymbol{P}}}(s,n)\)</span>, is <span class="math inline">\({|n|}\)</span> by definition, the trajectory <span class="math inline">\({{\boldsymbol{P}}}(t)\)</span> must satisfy <span class="math inline">\(n_{\min} \leq n(t) \leq n_{\max}\)</span>, where <span class="math inline">\(n_{\max} \geq 0\)</span> and <span class="math inline">\(n_{\min} \leq 0\)</span> are the maximum allowed path tracking error on the left and right side of the tool path, respectively, and where <span class="math inline">\(n_{\max}-n_{\min} &gt; 0\)</span>. It is also worth noting that, as suggested by the same figure, the width of the error band can assume different values for each path segment, thus allowing fine-tuning of local accuracy and overall time-efficiency.</p>
+<p>The most natural definition for a target function to be used in the trajectory planning problem is <em>time minimization</em>, i.e.: <span class="math display">\[\begin{aligned}
+  \textrm{Minimize:}\qquad \int_{0}^{t_f}
+  1{\,\mathrm{d}t}=t_f,\end{aligned}\]</span> subject to the constraint on the velocity norm <span class="math inline">\(f(s(t))=\sqrt{v_s(t)^2+v_n(t)^2}\)</span>, which must not be larger than the nominal feed rate: <span class="math inline">\(f^*(s(t)) \geq f(s(t))\)</span>. However, the numerical solution of the optimization problem defined by this target function proved computationally expensive.</p>
+<p>A different formulation that approximates the minimum time problem is the minimization of the distance between the actual feed rate, <span class="math inline">\(f(s(t))=\sqrt{v_s(t)^2+v_n(t)^2}\)</span>, and the nominal feed rate, <span class="math inline">\(f^*(s(t))\)</span>. A scaled version of this distance is the following <em>performance index</em>: <span class="math display">\[\begin{aligned}
+  \textrm{Minimize:}\qquad
+  \int_{0}^{t_f}
+  \Bigg(
+  \dfrac{f(s(t))}{f^*(s(t))}
+  -1\Bigg)^2{\,\mathrm{d}t}.\end{aligned}\]</span> Finally, to avoid excessive oscillations above the nominal feed rate, the actual feed rate must satisfy <span class="math inline">\(f(s(t))\leq f_{\max}\)</span>, where <span class="math inline">\(f_{\max} \geq f^*(s)\)</span> is the maximum feed rate allowed.</p>
+<p>The Optimal Control Problem, by using <span class="math inline">\(\zeta\)</span> coordinate, takes the form:</p>
+<ol>
+<li><p>find positive parameters <span class="math inline">\(T_1\)</span>, <span class="math inline">\(T_2\)</span>, …, <span class="math inline">\(T_{m}\)</span> and control history <span class="math inline">\(j_s(\zeta)\)</span>, <span class="math inline">\(j_n(\zeta)\)</span> that minimize the performance index: <span class="math display">\[\begin{aligned}
+\label{eq:target}
+      \sum_{k=1}^m
+      \left(\frac{T_k}{L_k}\right)
+      \int_{s_{k-1}}^{s_k}
+      \left(
+        \frac{f(s(\zeta))}{f^*(s(\zeta))}
+        -1\right)^2{\,\mathrm{d}\zeta},
+      \end{aligned}\]</span></p></li>
+<li><p>where <span class="math inline">\(v_s(\zeta)\)</span> and <span class="math inline">\(v_n(\zeta)\)</span> are the solutions of the ODE in Eq. [eq:ODE:zeta] with boundary conditions of Eq. [eq:ini:BC]–[eq:end:BC] and internal or interface conditions of Eq. [eq:compat];</p></li>
+<li><p>additional constraints on lateral position, velocity, acceleration, and jerk are also included: <span class="math display">\[\begin{aligned}
+\label{eq:ineq}
+      \begin{aligned}
+        n_{\min} \leq n(\zeta) \leq n_{\max}, \quad &amp;
+        v_s(\zeta)^2+v_n(\zeta)^2\leq f_{\max}^2,\\
+        |a_s(\zeta)|\leq a_{s,\max}\,, \quad &amp;
+        |a_n(\zeta)|\leq a_{n,\max}\,, \\
+        |j_s(\zeta)| \leq j_{s,\max}\,, \quad &amp;
+        |j_n(\zeta)| \leq j_{n,\max}\,,
+      \end{aligned}
+    \end{aligned}\]</span></p></li>
+</ol>
+<p>Note that Eq. [eq:ineq] limits acceleration and jerk within a rectangle in <span class="math inline">\((s,n)\)</span> coordinate. It is also possible to limit their values within a circle (i.e. so that they are limited in modulus): <span class="math display">\[\begin{aligned}
+    a_s(\zeta)^2+a_n(\zeta)^2\leq a_{\max}^2\,,\quad
+    j_s(\zeta)^2+j_n(\zeta)^2\leq j_{\max}^2\,,
+  \end{aligned}\]</span> or within a rectangle in <span class="math inline">\((x,y)\)</span>: <span class="math display">\[\begin{aligned}
+      \begin{aligned}
+        |a_s(\zeta)\cos(\theta)-a_n(\zeta)\sin\theta|&amp;\leq a_{x,\max}\,, \\
+        |a_s(\zeta)\sin(\theta)+a_n(\zeta)\cos\theta|&amp;\leq a_{y,\max}\,, \\
+        |j_s(\zeta)\cos(\theta)-j_n(\zeta)\sin\theta|&amp;\leq j_{x,\max}\,, \\
+        |j_s(\zeta)\sin(\theta)+j_n(\zeta)\cos\theta|&amp;\leq j_{y,\max}\,. \\
+      \end{aligned}
+  \end{aligned}\]</span> Other kind of constraints can be set depending on the characteristic of the machine tool dynamics or on the purpose of the optimization.</p>
+<p>Solution is obtained through a high-performance in-house implementation of an indirect solver for optimal control problems <span class="citation"></span>.</p>
+<p>It should be noted that the above formulation does not take into account the convexity of the problem. In fact — altought for simpler problems a proof of convexity can be provided with linear boundaries conditions — the much higher complexity of this formulation makes the same proof a formidable and still open issue. Nevertheless, the implementation of this formulation solves the problem of reducing the execution time of an existing part program, and it is still possibile to check, after the execution of the optimization algorithm, the first and the second variation <span class="citation"></span> with respect to solution in order to verify whether the solution corresponds a minimum or not. The analitycal form of such conditions are not provided here for the sake of brevity.</p>
+<h1 id="sec:experimental_validation">Experimental Validation</h1>
+<div class="figure">
+<img src="images/Heid_traj_jia.png" alt="Test tool path. It consists in 17 straight segments and 3 circular arcs. Detail shows the difference between nominal and actual toolpath, as measured by the CNC oscilloscope" />
+<p class="caption">Test tool path. It consists in 17 straight segments and 3 circular arcs. Detail shows the difference between nominal and actual toolpath, as measured by the CNC oscilloscope<span data-label="fig:test_toolpath"></span></p>
+</div>
+<p>Demonstrating the effectiveness of the approach described in the previous section would require to bypass the CNC of a real machine tool. Given that machine tools are rather complex and closed systems, Authors decided to follow a different approach, yet opening some interesting possibilities from a practical point of view. In short, the idea is to start from a standard part program (as the one producing the tool path reported in Fig. [fig:test_toolpath]), calculate an optimized trajectory by applying the OCP approach above described, and finally generate a new part program, where the original segments have been replaced with (typically much-) shorter segments that match the optimized tool path, and have a nominal feed rate set to the optimal one. The following subsections describe how this new part program can be generated, and how its efficiency has been tested comparing both execution time and motion smoothness when a modern CNC machine tool runs the original and the optimized part program.</p>
+<div class="figure">
+<img src="images/CNC_axes_2.png" alt="Experimental setup: the machine tool has X and Y axes on the head, Z on the table; a triaxial capacitive accelerometer is mounted on the moving head." />
+<p class="caption">Experimental setup: the machine tool has X and Y axes on the head, Z on the table; a triaxial capacitive accelerometer is mounted on the moving head.<span data-label="fig:machine"></span></p>
+</div>
+<h2 id="sub:point_reduction">Nodes resampling</h2>
+<p>The solution of the OCP is stored as a sequence of points. The distance between consequent points is often smaller than the average precision of an industrial machine tool (i.e. <span><span class="math inline">\(5\)</span> <span><span class="math inline">\(\mu\)</span>m</span></span>). Before generating the output part program, the set of points <span class="math inline">\(\mathbb{P}\)</span> has to be reduced. Reduction is performed by a post-processing script that takes as input the OCP solution: <span class="math display">\[\begin{aligned}
+  \mathbb{P} =  \left\{ {{\boldsymbol{P}}}(t) : \textrm{OCP solution for}~{{\boldsymbol{P}}_n}(s) \right\}\end{aligned}\]</span> and performs three steps of reduction:</p>
+<ol>
+<li><p>minimum distance elimination;</p></li>
+<li><p>completely aligned point elimination;</p></li>
+<li><p>chordal distance elimination.</p></li>
+</ol>
+<p>While implementation of the first step is trivial, the second and the third steps rely on the idea of a circle that passes through three points. Given a set of three non-coincident points <span class="math inline">\({{\boldsymbol{P}}}_1,\,{{\boldsymbol{P}}}_2,\,{{\boldsymbol{P}}}_3\)</span>, the center <span class="math inline">\({{\boldsymbol{P}}}_c\)</span> and the radius <span class="math inline">\(R\)</span> of the circumference are the solution of the problem: <span class="math display">\[\begin{aligned}
+    \left( P_{i,x} - P_{c,x} \right)^2 + \left( P_{i,y} - P_{c,y} \right)^2 = R^2,\quad\left\{
+  \begin{aligned}
+    i &amp;= 1\dots 3\\
+    R &amp;\geq 0
+  \end{aligned}\right.\end{aligned}\]</span> Solution exists and it is unique. If three points are aligned, <span class="math inline">\(R \rightarrow +\infty\)</span>. This is the second elimination criterion.</p>
+<div class="figure">
+<img src="images/3points.png" alt="Circle through three points" />
+<p class="caption">Circle through three points<span data-label="fig:3points"></span></p>
+</div>
+<p>Chordal distance is defined as distance between point <span class="math inline">\({{\boldsymbol{P}}}_2\)</span> and intersection point <span class="math inline">\({{\boldsymbol{P}}}_{\zeta}\)</span>. The position of intersection point is given by solution of: <span class="math display">\[\begin{aligned}
+  \begin{aligned}
+    \left(P_{3,x} - P_{1,x}\right) \left(P_{\zeta,y} - P_{1,y}\right) &amp; =
+    \left(P_{3,y} - P_{1,y}\right) \left(P_{\zeta,x} - P_{1,x}\right)  \\
+    \left(P_{2,x} - P_{c,x}\right) \left(P_{\zeta,y} - P_{c,y}\right) &amp; =
+    \left(P_{2,y} - P_{c,y}\right) \left(P_{\zeta,x} - P_{c,x}\right)  \\
+  \end{aligned}\end{aligned}\]</span> which can be formulated in matrix form as <span class="math inline">\(\mathbf{A} {{\boldsymbol{P}}}_{\zeta} = \mathbf{b}\)</span>, easy to solve analytically. The existence of <span class="math inline">\(\mathbf{A}^{-1}\)</span> is ensured by problem hypothesis (points not aligned). It should be clear now that we are using chordal distance as an approximation of the curvature. If this curvature is below a certain threshold then point <span class="math inline">\({{\boldsymbol{P}}}_2\)</span> is eliminated, and <span class="math inline">\({{\boldsymbol{P}}}_1\)</span> and <span class="math inline">\({{\boldsymbol{P}}}_3\)</span> are considered aligned, as a third elimination criterion.</p>
+<p>Description of other, more complex re-interpolation algorithms are omitted for the sake of brevity.</p>
+<h2 id="sub:results">Results</h2>
+<p>The machine tool used for testing is a Deckel-Maho DMU60-T with a Heidenhain iTNC530 controller, schematically shown in Fig. [fig:machine]. The machine has a maximum feed rate of <span><span class="math inline">\(20\)</span> m/min</span> on the X and Y axes and <span><span class="math inline">\(10\)</span> m/min</span> on the Z axis, though the latter was not moving during the tests. A triaxial capacitive accelerometer was mounted on the machine moveable head and used to record head accelerations with a sample rate of <span><span class="math inline">\(5\)</span> kHz</span>. Finally, the on-board software oscilloscope of the iTNC530 was used for recording time (with a sampling period of <span><span class="math inline">\(3.6\)</span> ms</span>), instant position and acceleration of X and Y axes, actual feed rate, and block number. part program were executed in-air (no workpiece) and with non-rotating spindle, in order to only measure accelerations produced by the two feed axes (X and Y).</p>
+<p>The toolpath represented in Fig. [fig:test_toolpath] has beed encoded into an ISO G-code part program, which has been pre-processed according to the OCP problem and the nodes resampling procedure above described. Constraints on the OCP have been set to the limits of the DMU60-T machine, according to the identification reported in Ref. <span class="citation"></span>. Several combinations of optimization parameters and node reresampling parameters have been tested. Due to space restrictions, only the more interesting cases are hereafter reported, and namely three combinations of tool path tracking tolerance: <span><span class="math inline">\(50\)</span> <span><span class="math inline">\(\mu\)</span>m</span></span>, <span><span class="math inline">\(250\)</span> <span><span class="math inline">\(\mu\)</span>m</span></span>, and <span><span class="math inline">\(500\)</span> <span><span class="math inline">\(\mu\)</span>m</span></span>). Eventually, the original part program and the pre-processed ones have been executed on a CNC machine tool.</p>
+<p>It is worth noting that the system here proposed is of special interest for high speed movements, i.e. when the nominal feed rate is close or equal to the machine limit, since under these conditions most of the cycle time is spent in accelerating or decelerating the axes, and a constant value of the actual feed rate is seldom maintained for the larger part of each positioning block. For this reason, the tests were performed at relatively high feed rates of 5, 15, and <span><span class="math inline">\(20\)</span> m/min</span>, the latter corresponding to the machine limit.</p>
+<div class="figure">
+<img src="images/path_with_tols_jia.png" alt="Nominal tool path (black) compared with the real tool paths as reported by the on-board CNC oscilloscope with three different tracking tolerances" />
+<p class="caption">Nominal tool path (black) compared with the real tool paths as reported by the on-board CNC oscilloscope with three different tracking tolerances<span data-label="fig:chart"></span></p>
+</div>
+<p>Figure [fig:chart] compares the nominal tool path with the actual tool paths recorded by the onboard oscilloscope for the three selected tracking tolerances. Figure [fig:tracking] shows how the actual tool paths comply with selected tracking tolerance limits, with the notable exception of some short overshoots in the case of the smaller tolerance, which is related to the fact that the OCP solver implements the constraints on tracking error as penalty functions.</p>
+<div class="figure">
+<img src="images/tracking_jia.png" alt="Path tracking errors compared with OCP tracking tolerances" />
+<p class="caption">Path tracking errors compared with OCP tracking tolerances<span data-label="fig:tracking"></span></p>
+</div>
+<div class="figure">
+<img src="images/feed.png" alt="Actual feed rate as measured by the oscilloscope compared with OCP result, plotted against normalized nominal curvilinear abscissa for three different tracking tolerances" />
+<p class="caption">Actual feed rate as measured by the oscilloscope compared with OCP result, plotted against normalized nominal curvilinear abscissa for three different tracking tolerances<span data-label="fig:feed"></span></p>
+</div>
+<div class="figure">
+<img src="images/accelerations.png" alt="Accelerations along X and Y axes, as measured by the accelerometer (red) and as calculated by the OCP. Square boxes represent the constraints set to the OCP" />
+<p class="caption">Accelerations along X and Y axes, as measured by the accelerometer (red) and as calculated by the OCP. Square boxes represent the constraints set to the OCP<span data-label="fig:accelerations"></span></p>
+</div>
+<div class="figure">
+<img src="images/OCP_accelerations.png" alt="Longitudinal and lateral accelerations,calculated by OCP. Square boxes represent the constraint set in longitudinal and lateral directions." />
+<p class="caption">Longitudinal and lateral accelerations,calculated by OCP. Square boxes represent the constraint set in longitudinal and lateral directions.<span data-label="fig:OCP_accelerations"></span></p>
+</div>
+<p><img src="images/osci_accel.png" alt="image" style="width:90.0%" /></p>
+<div class="figure">
+<img src="images/accelerations_material.png" alt="Comparison between execution in air and in material, with feed 18 m/min and tolerance 500 \mum" />
+<p class="caption">Comparison between execution in air and in material, with feed <span><span class="math inline">\(18\)</span> m/min</span> and tolerance <span><span class="math inline">\(500\)</span> <span><span class="math inline">\(\mu\)</span>m</span></span><span data-label="fig:mat_accel"></span></p>
+</div>
+<table>
+<caption>part program execution times<span data-label="tab:times"></span></caption>
+<tbody>
+<tr class="odd">
+<td align="left">feed rate</td>
+<td align="left">tolerance</td>
+<td align="right">execution time</td>
+<td align="right">change</td>
+<td align="right">OCP exec. time</td>
+</tr>
+<tr class="even">
+<td align="left">(m/min)</td>
+<td align="left">(mm)</td>
+<td align="right">(s)</td>
+<td align="right">(%)</td>
+<td align="right">(s)</td>
+</tr>
+<tr class="odd">
+<td align="left"><span class="math inline">\(20.00\)</span></td>
+<td align="left">nominal p.p.</td>
+<td align="right"><span class="math inline">\(4.67\)</span></td>
+<td align="right">–</td>
+<td align="right"><span class="math inline">\(-\)</span></td>
+</tr>
+<tr class="even">
+<td align="left"><span class="math inline">\(20.00\)</span></td>
+<td align="left"><span class="math inline">\(0.50\)</span></td>
+<td align="right"><span class="math inline">\(3.98\)</span></td>
+<td align="right"><span class="math inline">\(-14.8\)</span></td>
+<td align="right"><span class="math inline">\(3.02\)</span></td>
+</tr>
+<tr class="odd">
+<td align="left"><span class="math inline">\(20.00\)</span></td>
+<td align="left"><span class="math inline">\(0.25\)</span></td>
+<td align="right"><span class="math inline">\(4.42\)</span></td>
+<td align="right"><span class="math inline">\( -5.2\)</span></td>
+<td align="right"><span class="math inline">\(3.13\)</span></td>
+</tr>
+<tr class="even">
+<td align="left"><span class="math inline">\(20.00\)</span></td>
+<td align="left"><span class="math inline">\(0.05\)</span></td>
+<td align="right"><span class="math inline">\(4.97\)</span></td>
+<td align="right"><span class="math inline">\(  6.4\)</span></td>
+<td align="right"><span class="math inline">\(3.69\)</span></td>
+</tr>
+<tr class="odd">
+<td align="left"><span class="math inline">\(15.00\)</span></td>
+<td align="left">nominal p.p.</td>
+<td align="right"><span class="math inline">\(5.22\)</span></td>
+<td align="right">–</td>
+<td align="right"><span class="math inline">\(-\)</span></td>
+</tr>
+<tr class="even">
+<td align="left"><span class="math inline">\(15.00\)</span></td>
+<td align="left"><span class="math inline">\(0.50\)</span></td>
+<td align="right"><span class="math inline">\(4.21\)</span></td>
+<td align="right"><span class="math inline">\(-19.4\)</span></td>
+<td align="right"><span class="math inline">\(3.18\)</span></td>
+</tr>
+<tr class="odd">
+<td align="left"><span class="math inline">\(15.00\)</span></td>
+<td align="left"><span class="math inline">\(0.25\)</span></td>
+<td align="right"><span class="math inline">\(4.50\)</span></td>
+<td align="right"><span class="math inline">\(-13.9\)</span></td>
+<td align="right"><span class="math inline">\(3.29\)</span></td>
+</tr>
+<tr class="even">
+<td align="left"><span class="math inline">\(15.00\)</span></td>
+<td align="left"><span class="math inline">\(0.05\)</span></td>
+<td align="right"><span class="math inline">\(4.99\)</span></td>
+<td align="right"><span class="math inline">\( -4.4\)</span></td>
+<td align="right"><span class="math inline">\(3.71\)</span></td>
+</tr>
+<tr class="odd">
+<td align="left"><span class="math inline">\(5.00\)</span></td>
+<td align="left">nominal p.p.</td>
+<td align="right"><span class="math inline">\(6.93\)</span></td>
+<td align="right">–</td>
+<td align="right"><span class="math inline">\(-\)</span></td>
+</tr>
+<tr class="even">
+<td align="left"><span class="math inline">\(5.00\)</span></td>
+<td align="left"><span class="math inline">\(0.50\)</span></td>
+<td align="right"><span class="math inline">\(6.67\)</span></td>
+<td align="right"><span class="math inline">\(-3.6\)</span></td>
+<td align="right"><span class="math inline">\(6.27\)</span></td>
+</tr>
+<tr class="odd">
+<td align="left"><span class="math inline">\(5.00\)</span></td>
+<td align="left"><span class="math inline">\(0.25\)</span></td>
+<td align="right"><span class="math inline">\(7.85\)</span></td>
+<td align="right"><span class="math inline">\(13.4\)</span></td>
+<td align="right"><span class="math inline">\(6.36\)</span></td>
+</tr>
+<tr class="even">
+<td align="left"><span class="math inline">\(5.00\)</span></td>
+<td align="left"><span class="math inline">\(0.05\)</span></td>
+<td align="right"><span class="math inline">\(8.21\)</span></td>
+<td align="right"><span class="math inline">\(18.5\)</span></td>
+<td align="right"><span class="math inline">\(6.40\)</span></td>
+</tr>
+</tbody>
+</table>
+<div class="figure">
+<img src="images/timecomp.png" alt="Comparison for time efficiency metric \eta" />
+<p class="caption">Comparison for time efficiency metric <span class="math inline">\(\eta\)</span><span data-label="fig:timecomp"></span></p>
+</div>
+<p>It is evident that the optimized part program follows a smoother trajectory that results in smaller accelerations, as can be noted by observing the acceleration components <span class="math inline">\(a_x\)</span> and <span class="math inline">\(a_y\)</span> reported in Fig. [fig:accelerations]. At the same time—and what really matters—the execution time is significantly reduced as can be observed from data in Tab. [tab:times], with gains ranging from 5 to 20% in the most relevant cases. Moreover, is should be noted that the execution times obtained by the OCP solution are always faster than the nominal case, meaning that the complete substutution of current CNC profiling/interpolation scheme with one based on the OCP described in Ref. <span class="citation"></span> would ensure significant advantages in every condition. The different performance of optimization and real execution has been assessed using time efficiency metrics <span class="citation"></span>, defined as ratio between minimum theoretical execution time and effective execution time: <span class="math display">\[\begin{aligned}
+\label{eq:time_eff}
+\eta = \dfrac{L}{f\,T}\end{aligned}\]</span></p>
+<p>Time efficiency for both OCP and real execution time are compared in Fig. [fig:timecomp], while timing are reported in Table [tab:times].</p>
+<p>On the negative side, Fig. [fig:feed] remarks how the CNC own feed rate profiling is significantly reducing the actual feed rate with respect to that resulting from the OCP solution, thus somehow limiting the effectiveness of the proposed solution in terms of minimum attainable execution time. Those effects could also be seen in terms of optimized and actual accelerations. Even if the optimized solution lays inside experimentally identified boundaries (Fig. [fig:OCP_accelerations]), sometimes during the tests it appears to be further limited by the CNC, Fig. [fig:osci_accel].</p>
+<p>In Fig. [fig:mat_accel] a comparison of accelerations between two executions of the same optimized part program — in-air and in-material — is presented. The operation is the same toolpath as in Fig. [fig:test_toolpath], with a nominal feed rate <span><span class="math inline">\(18\)</span> m/min</span> and a tolerance of <span><span class="math inline">\(500\)</span> <span><span class="math inline">\(\mu\)</span>m</span></span>. It is clear that presence of material does not change the foundamental dynamic of execution, but it also gives only an higher frequency contribution.</p>
+<h1 id="sec:conclusion">Conclusion</h1>
+<p>This work shows how a feed rate profiling algorithm for motion interpolation of cartesian axes based on application of Optimal Control Theory — and detailedly described in a previous Authors’ work — can be exploited for rewriting a standard G-code part program. While the original work described a system aimed at replacing the conventional CNC profiler/interpolator, the present work describes an offline preprocessing software for improving a given tool path according to the OCP solution.</p>
+<p>Such program preprocessing allows to execute programs in less time and with reduced accelerations (and thus vibrations). Nevertheless, the actual axes motion is still not as effective as that calculated by the OCP solution, which remains the most effective approach for improving the efficiency of standard CNC profilers/interpolators.</p>
+
+<div class="references">
+<p><span>16</span> P. Bosetti and E. Bertolazzi: “feed rate and trajectory optimization for <span>CNC</span> machine tools”, Robotics and Computer-Integrated Manufacturing, 30, 6, 667-677, (December, 2014)</p>
+<p>A. Jayendran: “<span>CNC machines (CNC Maschinen)</span>”, Mechanical Engineering, Teubner, 177–192, (2006)</p>
+<p>Y. Altintas and W. K. Munasinghe: “A Hierarchical Open-Architecture <span>CNC</span> System for Machine Tools”, Annals of CIRP, 43, 1, 349–354, (1994)</p>
+<p>B. Sencer, Y. Altintas, and E. Croft: “Feed optimization for five-axis <span>CNC</span> machine tools with drive constraints”, International Journal of Machine Tools and Manufacture, 48, 7–8, 733–745, (2008)</p>
+<p>A. Gasparetto, A. Lanzutti, R. Vidoni, and V. Zanotto: “Experimental validation and comparative analysis of optimal time-jerk algorithms for trajectory planning”, Robotics and Computer-Integrated Manufacturing, 28, 2, 164–181, (2012)</p>
+<p>J. Dong, P. Ferreira, and J. Stori: “feed rate optimization with jerk constraints for generating minimum-time trajectories”, International Journal of Machine Tools and Manufacture, 47, 12–13, 1941–1955, (2007)</p>
+<p>J. Dong and J. A. Stori: “Bidirectional Scan Algorithm for Constrained feed rate Optimization”, Journal of Dynamic Systems, Measurement, and Control, 128, 379–390, (June, 2006)</p>
+<p>J. Dong and J. Stori: “A generalized time-optimal bidirectional scan algorithm for constrained feed rate optimization”, Journal of Dynamic Systems, Measurement and Control, Transactions of the ASME, 128, 2, 379–390, (2006)</p>
+<p>D. Verscheure, B. Demeulenaere, J. Swevers, J. De Schutter, and M. Diehl: “Time-energy optimal path tracking for robots: a numerically efficient optimization approach”, Advanced Motion Control, 2008. AMC ’08. 10th IEEE International Workshop on, 727–732, (2008)</p>
+<p>Z. Shiller: “On singular time-optimal control along specified paths”, IEEE Transactions on Robotics and Automation, 10, 4, 561-566, (1994)</p>
+<p>X. Beudaert, S. Lavernhe, and C. Tournier: “Feedrate interpolation with axis jerk constraints on 5-axis <code>NURBS</code> and <code>G1</code> tool path”, International Journal of Machine Tools and Manufacture, 57, 0, 73–82, (2012)</p>
+<p>J. Jahanpour and B. Imani: “Real-time P-H curve CNC interpolators for high speed cornering”, The International Journal of Advanced Manufacturing Technology, 39, 302–316, (2008)</p>
+<p>Y. Altintas and N. Erol: “Open Architecture Modular Tool Kit for Motion and Machining Process Control”, CIRP Annals - Manufacturing Technology, 47, 1, 295–300, (1998)</p>
+<p>B.-F. Ju, X. Bai, J. Chen, and Y. Ge: “Design of Optimal Fast Scanning Trajectory for the Mechanical Scanner of Measurement Instruments”, Scanning, (2013)</p>
+<p>K. Zhang, C.-M. Yuan, X.-S. Gao, and H. Li: “A greedy algorithm for feedrate planning of <span>CNC</span> machines along curved tool paths with confined jerk”, Robotics and Computer-Integrated Manufacturing, 28, 4, 472–483, (2012)</p>
+<p>S.-H. Suh, S. K. Kang, D.-H. Chung, and I. Stroud: “Theory and Design of CNC Systems”, Springer, (2008)</p>
+<p>A. E. Bryson, Y. Ho, “Applied optimal control: optimization, estimation and control”, CRC Press, (1975)</p>
+<p>F. Biral, E. Bertolazzi, P. Bosetti, “Notes on Numerical Methods for Solving Optimal Control Problems”, IEEJ Transaction on Industry Applications, (2015)</p>
+</div>
+<h1 id="sec:original_part_program">Original part program</h1>
+<p>Here an example of part program used for simulations is reported. The optimized version (omitted for a sake of brevity) has part included between <code>; { optimize start }</code> and <code>; { optimize end }</code> modified.</p>
+<p>The next example optimize the code with tolerance set to <span><span class="math inline">\(250\)</span> <span><span class="math inline">\(\mu\)</span>m</span></span>.</p>
+<pre><code>%input_f20000 G71 *
+N10 ; SIMPLE TEST
+N20 ; AUTHOR - Paolo Bosetti
+; { generator }
+N60 G00 G90*
+N80 T0*
+N90 S1600 F20000*
+N100 X-10 Y+0*
+N110 G01 Z+0*
+;N111 G62 T0.5 P01 1*
+N112 G38*
+; { optimize start tol=250u vnorm=max mesh=500 }
+N120 G91 X+30 Y+2*
+N125 X+30 Y-2*
+N130 G03 Y+10 R+5*
+N140 G01 X-30 Y+2*
+N145 X-30 Y-2*
+N150 G91 Y+10*
+N160 G91 X+30 Y+2*
+N165 X+30 Y-2*
+N170 G91 G03 Y+10 R+5*
+N180 G01 X-30 Y+2*
+N185 X-30 Y-2*
+N190 G91 Y+10*
+N200 G91 X+30 Y+2*
+N205 X+30 Y-2*
+N210 G91 G03 Y+10 I+0 J+5*
+N220 G01 X-30 Y+2*
+N225 X-30 Y-2*
+N230 G91 Y+10*
+N240 G91 X+30 Y+2*
+N245 X+30 Y-2*
+; { optimize end }
+N246 G38*
+N250 G00*
+N260 T0 M30*
+N99999999 %input_f20000 G71 *</code></pre>
+</div>
+</body>
+</html>

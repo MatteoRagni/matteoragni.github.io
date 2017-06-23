@@ -1,0 +1,131 @@
+/* Matteo Ragni */
+/*
+<link href="https://fonts.googleapis.com/css?family=Lato:300,400|Roboto+Slab" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<script src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_CHTML-full" type="text/javascript"></script>
+*/
+* {
+  font-family: 'Lato', sans-serif;
+  font-weight: 300;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+}
+
+#body {
+  margin-left: 10%;
+  margin-right: 10%;
+}
+
+#abstract {
+  margin-left: 15%;
+  margin-right: 15%;
+  color: gray;
+  font-size: 0.8em;
+  padding: 10px;
+}
+
+img {
+  width: 500px;
+  display: block;
+  margin: 0 auto;
+}
+
+h1, h2, h3, h4, h5 {
+  border-bottom: 1px solid #aaa;
+  padding-bottom: 20px;
+  margin-top: 100px;
+  margin-bottom: 10px;
+  font-family: 'Roboto Slab', sans-serif;
+}
+
+.figure .caption,
+caption {
+  color: gray;
+  font-size: 0.9em;
+  width: 100%;
+  text-align: center;
+}
+
+.figure {
+  border-top: 1px solid #aaa;
+  border-bottom: 1px solid #aaa;
+}
+
+table {
+  width: 100%;
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: 100px;
+  padding-right: 100px;
+  margin-bottom: 20px;
+  border-collapse: collapse;
+}
+
+caption {
+  margin-bottom: 20px;
+}
+
+td {
+  text-align: center;
+  padding: 10px;
+  border-bottom: 1px solid #aaa;
+}
+
+tr:first-child {
+  background-color: #aaa;
+  color: white;
+  font-weight: bold;
+}
+
+p,
+span.math-inline {
+  text-align: justify;
+  line-height: 2.0;
+  font-size: 1.5em;
+}
+
+.references {
+  margin-top: 120px;
+  color: gray;
+  border-top: 1px solid #aaa;
+}
+
+.references p { line-height: 1.0; }
+
+/*.mjx-chtml {
+  font-size: 1.em !important;
+}*/
+
+h1 { font-size: 3em; }
+h2 { font-size: 2em; }
+h3 { font-size: 1.8em; }
+h4 { font-size: 1.8em; }
+
+h1.title {
+  background-color: #eee;
+  text-align: center;
+  font-size: 2.5em;
+  padding: 10px;
+  border: none;
+  margin: 0;
+}
+
+h2.author {
+  text-align: center;
+  font-size: 1.5em;
+  padding: 10px;
+  border: none;
+}
+
+pre {
+  padding: 20px;
+  border: 1px solid #eee;
+}
+
+code {
+  font-family: 'Fira Mono', monospace !important;
+  color: #777;
+}

@@ -1,0 +1,238 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <meta http-equiv="Content-Style-Type" content="text/css" />
+  <meta name="generator" content="pandoc" />
+  <meta name="author" content="Matteo Ragni" />
+  <title>Mr.CAS— A Minimalistic (pure) RubyCAS for Fast Prototyping and Code Generation</title>
+  <style type="text/css">code{white-space: pre;}</style>
+  <link href="https://fonts.googleapis.com/css?family=Lato:300,400|Roboto+Slab" rel="stylesheet">
+  <link rel="stylesheet" href="../style.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML" type="text/javascript"></script>
+</head>
+<body>
+<div id="header">
+<h1 class="title"><span><em>Mr.CAS</em></span>— A Minimalistic (pure) <span><em>Ruby</em></span> CAS for Fast Prototyping and Code Generation</h1>
+<h2 class="author">Matteo Ragni</h2>
+</div>
+<div id="abstract">
+<h4>Abstract</h4>
+<p>There are Computer Algebra System (CAS) systems on the market with complete solutions for manipulation of analytical models.
+But exporting a model that implements specific algorithms on specific platforms, for target languages or for particular numerical library,
+is often a rigid procedure that requires manual post-processing.</p>
+<p>This work presents a Ruby library that exposes core CAS capabilities, i.e. simplification, substitution, evaluation, etc.
+The library aims at programmers that need to rapidly prototype and generate numerical code for different target languages,
+while keeping separated mathematical expression from the code generation rules, where best practices for numerical conditioning are implemented.</p>
+<p>The library is written in pure Ruby language and is compatible with most Ruby interpreters.</p>
+</div>
+<div id="body">
+<h1 id="sec:motivation">Motivation and significance</h1>
+<p><span><em>Ruby</em></span> <span class="citation">(Flanagan and Matsumoto 2008)</span> is a purely object-oriented scripting language designed in the mid-1990s by Yukihiro Matsumoto, internationally standardized since 2012 as ISO/IEC 30170.</p>
+<p>With the advent of the <em>Internet of Things</em>, a compact version of the <span><em>Ruby</em></span> interpreter called <span><em>mRuby</em></span>(<em>eMbedded Ruby</em>) <span class="citation">(Tanaka, Nagumanthri, and Matsumoto 2015)</span> was published on <em>GitHub</em> by Matsumoto, in 2014. The new interpreter is a lightweight implementation, aimed at both low power devices and personal computers, and complies with the standard <span class="citation">(“ISO/IEC 30170 – Information  technology – Programming languages – Ruby” 2000)</span>. <span><em>mRuby</em></span>has a completely new API, and it is designed to be embedded in complex projects as a front-end interface—for example, a numerical optimization suite may use <span><em>mRuby</em></span>for problem definition.</p>
+<p>The <span><em>Ruby</em></span> code-base exposes a large set of utilities in core and standard libraries, that can be furthermore expanded through third party libraries, or <em>gems</em>. Among the large number of available gems, <span><em>Ruby</em></span> still lacks an Automatic and Symbolic Differentiation (ASD) <span class="citation">(Tolsma and Barton 1998)</span> engine that handles basic computer algebra routines, compatible with all different <span><em>Ruby</em></span> interpreters.</p>
+<p>Nowadays <span><em>Ruby</em></span> is mainly known thanks to the web-oriented <em>Rails</em> framework. Its expressiveness and elegance make it interesting for use in the scientific and technical field. An ASD-capable gem would prove a fundamental step in this direction, including the support for flexible code generation for high-level software—for example, IPOPT <span class="citation">(Wächter and Laird 2009; Wächter and Biegler 2006)</span>.</p>
+<p><span><em>Mr.CAS</em></span><a href="#fn1" class="footnoteRef" id="fnref1"><sup>1</sup></a> is a gem implemented in pure <span><em>Ruby</em></span> that supports symbolic differentiation (SD) and fundamentals computer algebra operations <span class="citation">(Von Zur Gathen and Gerhard 2013)</span>. The library aims at supporting <span><span>programmers in</span></span> rapid prototyping of numerical algorithms and in code generation, for different target languages. It permits to implement mathematical models <span><span>with a clean separation between actual mathematical formulations and conditioning rules for numerical instabilities</span></span>, in order to support <span><span>generation of code that is more robust with respect to issues that can be introduced by specific applications</span></span>. As a long-term effort, it will become a complete open-source CAS system for the standard <span><em>Ruby</em></span> language.</p>
+<p>Other CAS libraries for <span><em>Ruby</em></span> are available:</p>
+<dl>
+<dt><em>Rucas</em> <span class="citation">(Lees-Miller 2010)</span>, <em>Symbolic</em> <span class="citation">(Bayramgalin 2012)</span></dt>
+<dd><p>: milestone gems, yet at an early stage and with discontinued development status. Both offer basic simplification routines, although they lack differentiation.</p>
+</dd>
+<dt><em>Symengine</em> <span class="citation">(Certik et al. 2016)</span></dt>
+<dd><p>: is a wrapper of the <em>symengine</em> C++ library. The back-end library is very complete, but it is compatible only with the <em>vanilla C</em> <span><em>Ruby</em></span> interpreter and has several dependencies. At best of Author knowledge, the gem does not work with <span><em>Ruby</em></span> 2.x interpreter.</p>
+</dd>
+</dl>
+<p>In Section [sec:description], <span><em>Mr.CAS</em></span>containers and tree structure are explained in detail and applied to basic CAS tasks. In Section [sec:examples], examples on how to use the library as code generator or as interface are described. Finally, the reasons behind the implementation and the long term desired impact are depicted in Section [sec:impact]. All code listings are available at <a href="http://bit.ly/Mr_CAS_examples" class="uri">http://bit.ly/Mr_CAS_examples</a>.</p>
+<h1 id="sec:description">Software description</h1>
+<h2 id="sec:architecture">Software Architecture</h2>
+<p><span><em>Mr.CAS</em></span> is an object oriented ASD gem that supports computer algebra routines such as simplifications and substitutions. When gem is required, it overloads methods of <span><code>Fixnum</code></span> and <span><code>Float</code></span> classes, making them compatible with fundamental symbolic classes.</p>
+<p>Each symbolic expression (or operation) is the instance of an object, that inherits from a common virtual ancestor: <span><span><code>CAS</code></span><span><code>::</code></span><code>Op</code></span>. An operation encapsulates sub-operations recursively, building a tree, that is the mathematical equivalent of function composition: <span class="math display">\[\left( f \, \circ \, g \right)\]</span></p>
+<div class="figure">
+<img src="images/graph-ex.png" alt="[fig:graph]Tree of the expression derived in Listing [code:example-diff]" />
+<p class="caption">[fig:graph]Tree of the expression derived in Listing [code:example-diff]</p>
+</div>
+<p>When a new operation is created, it is appended to the tree. The number of branches are determined by the parent container class of the current symbolic function. There are three possible containers:</p>
+<dl>
+<dt><span><span><code>CAS</code></span><span><code>::</code></span><code>Op</code></span></dt>
+<dd><p>single sub-tree operation—e.g. <span class="math inline">\(\sin(\cdot)\)</span>.</p>
+</dd>
+<dt><span><span><code>CAS</code></span><span><code>::</code></span><code>BinaryOp</code></span></dt>
+<dd><p>dual sub-tree operation—e.g. exponent <span class="math inline">\(x^y\)</span>—that inherits from <span><span><code>CAS</code></span><span><code>::</code></span><code>Op</code></span>.</p>
+</dd>
+<dt><span><span><code>CAS</code></span><span><code>::</code></span><code>NaryOp</code></span></dt>
+<dd><p>operation with arbitrary number of sub-tree—e.g. sum <span class="math inline">\(x_1 + \cdots + x_N\)</span>—that inherits from <span><span><code>CAS</code></span><span><code>::</code></span><code>Op</code></span>.</p>
+</dd>
+</dl>
+<p>Fig. [fig:graph] contains a graphical representation of a expression tree. The different kind of containers allows to introduce some properties—i.e. <em>associativity</em> and <em>commutativity</em> for sums and multiplications <span class="citation">(Cohen 2003)</span>. Each container exposes the sub-tree as instance properties. <span><span>Basic</span></span> containers interfaces and inheritances are shown in Fig. [fig:uml-container]. <span><span>For a complete overview of all classes and inheritance, please refer to software documentation.</span></span></p>
+<p>The terminal leaves of the graph are the classes <span><span><code>CAS</code></span><span><code>::</code></span><code>Constant</code></span>, <span><span><code>CAS</code></span><span><code>::</code></span><code>Variable</code></span> and <span><span><code>CAS</code></span><span><code>::</code></span><code>Function</code></span>. The first models a simple numerical value, while the second represents an independent variable, that can be used to perform derivatives and evaluations, and the latter is a prototype of implicit functions. Those leaves exemplify only real scalar expressions, with definition of complex, vectorial, and matricial extensions as milestones for the next major release.</p>
+<p>The symbolic differentiation (<span><span><span><code>CAS</code></span><span><code>::</code></span><code>Op</code></span><code>#diff</code></span>) explores the graph until it reaches ending nodes. A terminal node is the starting point for derivatives accumulation, the mathematical equivalent of the chain rule: <span class="math display">\[\left( f  \, \circ \, g \right)&#39; \: = \:
+\left( f&#39; \, \circ \, g \right) \: g&#39;\]</span> The recursiveness is used also for simplifications (<span><span><span><code>CAS</code></span><span><code>::</code></span><code>Op</code></span><code>#simplify</code></span>), substitutions (<span><span><span><code>CAS</code></span><span><code>::</code></span><code>Op</code></span><code>#subs</code></span>), evaluations (<span><span><span><code>CAS</code></span><span><code>::</code></span><code>Op</code></span><code>#call</code></span>) and code generation.</p>
+<div class="figure">
+<img src="images/class-struct.png" alt="[fig:uml-container]Reduced version of classes interface and inheritance. The figure depicts the basic abstract class CAS::Op, from which the single argument operations inherit. CAS::Op is also the ancestor for other kind of containers, namely the CAS::BinaryOp and CAS::NaryOp, the models of container with two and more arguments" />
+<p class="caption">[fig:uml-container]Reduced version of classes interface and inheritance. <span><span>The figure depicts the basic abstract class <span><span><code>CAS</code></span><span><code>::</code></span><code>Op</code></span>, from which the <em>single argument</em> operations inherit. <span><span><code>CAS</code></span><span><code>::</code></span><code>Op</code></span> is also the ancestor for other kind of containers, namely the <span><span><code>CAS</code></span><span><code>::</code></span><code>BinaryOp</code></span> and <span><span><code>CAS</code></span><span><code>::</code></span><code>NaryOp</code></span>, the models of container with <em>two</em> and <em>more arguments</em></span></span></p>
+</div>
+<h2 id="sec:functionalities">Software Functionalities</h2>
+<h3 id="basic-functionalities">Basic Functionalities</h3>
+<p><em>No additional dependencies are required</em>. The gem can be installed through the <em>rubygems.org</em> provider<a href="#fn2" class="footnoteRef" id="fnref2"><sup>2</sup></a>. Gem functionalities are required using the Kernel method: <code>require ’Mr.CAS’</code>. All methods and classes are encapsulated in the module <code>CAS</code>.</p>
+<p>Symbolic Differentiation (SD) is performed with respect to independent variables (<span><span><code>CAS</code></span><span><code>::</code></span><code>Variable</code></span>) through forward accumulation, even for implicit functions. The differentiation is done by the method <span><span><span><code>CAS</code></span><span><code>::</code></span><code>Op</code></span><code>#diff</code></span>, having a <span><span><code>CAS</code></span><span><code>::</code></span><code>Variable</code></span> as argument, as shown in Listing [code:example-diff].</p>
+<p>Automatic differentiation (AD) is included as a plugin and exploits the properties of dual numbers to efficiently perform differentiation, see <span class="citation">(Bartholomew-Biggs et al. 2000)</span> for further details. The AD strategy is useful in case of complex expressions, where explicit derivative’s tree may exceed the call stack depth.</p>
+<p>Simplifications are not executed automatically, after differentiation. Each node of the tree knows rules for simplify itself, and rules are called recursively, exactly like ASD. Simplifications that require a <em>heuristic expansion</em> of the sub-graph—i.e. some trigonometric identities—are not defined for now, but can be easily achieved through substitutions, as shown in Listing [code:example-simp].</p>
+<p>The tree is numerically evaluated when the independent variables values are provided in a feed dictionary. The graph is reduced recursively to a single numeric value, as shown in Listing [code:example-call].</p>
+<p>Symbolic expressions can be used to create comparative expressions, that are stored in special container classes, modeled by the ancestor <span><span><code>CAS</code></span><span><code>::</code></span><code>Condition</code></span>—for example, <span class="math inline">\(f(\cdot) \geq g(\cdot)\)</span>. This allow the definition of piecewise functions, <span><span>in <span><span><code>CAS</code></span><span><code>::</code></span><code>Piecewise</code></span>. Internally, <span class="math inline">\(\max(\cdot)\)</span> and <span class="math inline">\(\min(\cdot)\)</span> functions are declared as operations that inherits from <span><span><code>CAS</code></span><span><code>::</code></span><code>Piecewise</code></span></span></span>—for example, <span class="math inline">\(\max(f(\cdot), g(\cdot))\)</span>. Usage is shown in Listing [code:example-expr].</p>
+<h3 id="meta-programming-and-code-generation">Meta-programming and Code-Generation</h3>
+<p><span><em>Mr.CAS</em></span> is developed explicitly for <span>metaprogramming</span> and code generation. Expressions can be exported as source code or used as prototypes for callable <em>closures</em> (the <code>Proc</code> object in Listing [code:example-proc]):</p>
+<p>Compiling a closure of a tree is like making its snapshot, thus any further manipulation of the expression does not update the callable object. This drawback is balanced by the faster execution time of a <code>Proc</code>: when a graph needs <em>only to be evaluated</em>, transforming it in a <em>closure</em> reduces the execution time—for example, in a iterative algorithm, where a closure is called at each iteration.</p>
+<p>Code generation should be flexible enough to export expression trees in a user’s target language. Generation methods for common languages are included in specific <em>plugins</em>. Users can furthermore expand exporting capabilities by writing specific exportation rules, overriding method for existing plugin, or designing their own exporter, like the one shown in Listing [code:example-exporting]:</p>
+<h1 id="sec:examples">Illustrative Examples</h1>
+<h2 id="code-generation-as-c-library">Code Generation as C Library</h2>
+<p>This example <span><span>shows how a <em>user of <span><em>Mr.CAS</em></span></em> can export a mathematical model as a C library</span></span>. The <code>c-opt</code> plugin implements advanced features such as code optimization and generation of libraries.</p>
+<p>The library <code>example</code> implements the model: <span class="math display">\[\label{eq:ex1model}
+f(x, y) = x^y + g(x)\, \log(\sin(x^y))\]</span> where the expression <span class="math inline">\(g(x)\)</span> belongs to a external object, declared as <code>g_impl</code>, which interface is described in <code>g_impl.h</code> header. <span><span>What should be noted is the corpus of the exported code</span></span>: the intermediate operation <span class="math inline">\(x^y\)</span> is evaluated once, even if appears twice in eq. [eq:ex1model]. The C function that implements <span class="math inline">\(f(x,y)\)</span> is declared with the token <code>f_impl</code>. The exporter uses as default type <code>double</code> for variables and function returned values. Library created by <code>CLib</code> contains the code shown in Listing [code:c.ex.1].</p>
+<p>The function <span class="math inline">\(g(x)\)</span> models the following operation: <span class="math display">\[g(x) = (\sqrt{x + a} - \sqrt{x}) + \sqrt{\pi + x}\]</span> and may suffer from <em>catastrophic <span><span>numerical</span></span> cancellation</em> <span class="citation">(Higham 2002)</span> <span><span>when the <span class="math inline">\(x\)</span> value is considerably greater than <span class="math inline">\(a\)</span></span></span>. The user <span><span>may decide to</span></span> specialize code generation rules for this particular expression, <span><span>stabilizing it</span></span> through rationalization. <span><span>Without modifying the actual model</span></span>, <span class="math inline">\(g(x)\)</span> the rationalization for differences of square roots<a href="#fn3" class="footnoteRef" id="fnref3"><sup>3</sup></a> is inserted <span><span>into the exportation rules</span></span>, as in Listing [code:example-exporting-C-2]. <span><span>The rules are valid only for the current user script</span></span>. For more insight about <code>__to_c</code> and <code>__to_c_impl</code><span><span>,</span></span> refer to the software manual.</p>
+<p>It should be noted the separation between the <em>model</em>, which does not contain <span><span>stabilization</span></span>, and the <em>code generation rule</em>. For this particular case, the code generation rule in Listing [code:example-exporting-C-2] overloads the predefined one, in order to <span><span>obtain the conditioned code</span></span>. Obviously, the user can decide to apply directly the conditioning on the model itself<span><span>, but this may change the calculus behavior in further manipulation</span></span>.</p>
+<h2 id="using-the-module-as-interface">Using the module as interface</h2>
+<p>As example, an implementation of an algorithm that estimates the <em>order of convergence</em> for trapezoidal integration scheme <span class="citation">(Weideman 2002)</span> is provided, using the symbolic differentiation as interface.</p>
+<p>Given a function <span class="math inline">\(f(x)\)</span>, the trapezoidal rule for primitive estimation for the interval <span class="math inline">\([a,\,b]\)</span> is: <span class="math display">\[I_{n}(a, b) = h\, \left( \dfrac{f(a) + f(b)}{2} +
+    \sum\limits_{k = 1}^{n - 1}{f \left( a + k \,h \right)} \right)\]</span> with <span class="math inline">\(h = (b - a) / n \)</span>, where <span class="math inline">\(n\)</span> mediates the step size of the integration. When exact primitive <span class="math inline">\(F(x)\)</span> is known, approximation error is: <span class="math display">\[E[n] = F(b) - F(a) - I_{n}(a, b)\]</span> The error has an asymptotic expansion of the form: <span class="math display">\[E[n] \propto C\,{n}^{-p}\]</span> where <span class="math inline">\(p\)</span> is the convergence order. Using a different value for <span class="math inline">\(n\)</span>, for example <span class="math inline">\(2\,n\)</span>, the ratio [eq:error.ratio] takes the approximate vale: <span class="math display">\[\label{eq:error.ratio}
+  \dfrac{E[n]}{E[2\,n]} \approx 2^{p} \quad \rightarrow \quad p \approx \log_2 \left( \dfrac{E[n]}{E[2\,n]} \right)\]</span> The Listings [code:example-integrate-ruby] and [code:example-integrate-python] contain the implementation of the described procedure using the proposed gem and the well known <em>Python</em> <span class="citation">(Van Rossum and Drake 2011)</span> library <em>SymPy</em> <span class="citation">(Smith et al. 2016)</span>.</p>
+<h2 id="ode-solver-with-taylors-series">ODE Solver with Taylor’s series</h2>
+<p>In this example, a solving step for a specific ordinary differential equation (ODE) using Taylor’s series method <span class="citation">(Butcher 2008)</span> is derived. Given an ODE in the form: <span class="math display">\[\label{eq:taylor.ode}
+y&#39;(x) = f\left(x, y(x)\right)\]</span> the integration step with order <span class="math inline">\(n\)</span> has the form: <span class="math display">\[y(x + h) = y(x)  + h\,y&#39;(x) + \dots + \dfrac{h^{n}}{n!} \, y^{(n)}(x) + E_{n}(x)\]</span> where it is possible to substitute equation [eq:taylor.ode]: <span class="math display">\[{y}^{(i)}(x) =
+\dfrac{\partial {y}^{(i-1)}(x)}{\partial x} +
+\dfrac{\partial {y}^{(i-1)}(x)}{\partial y} {y&#39;}(x)\]</span> For this algorithm, three methods are defined. The first evaluates the factorial, the second evaluates the list of required derivatives, and the third returns the integration step in a symbolic form. The result of the third method is transformed in a C function. In this particular case, the ODE is <span class="math inline">\(y&#39; = x y\)</span>. For the resulting C code of Listing [code:example-ode], refer to the online version of the examples.</p>
+<p>Other examples are available online<a href="#fn4" class="footnoteRef" id="fnref4"><sup>4</sup></a>:</p>
+<p>adding a user defined <span><span><code>CAS</code></span><span><code>::</code></span><code>Op</code></span> that implements the <span class="math inline">\(\mathrm{sign}(\cdot)\)</span> function with the appropriate optimized C generation rule;</p>
+<p>exporting the operation as a continuous function through overloading or substitutions;</p>
+<p>performing a symbolic Taylor’s series;</p>
+<p>writing an exporter for the LaTeX language;</p>
+<p>a Newton-Raphson algorithm using automatic differentiation plugin.</p>
+<h1 id="sec:impact">Impact</h1>
+<p><span><em>Mr.CAS</em></span> is a midpoint between a CAS and an ASD library. It allows one to manipulate expressions while maintaining the complete control on how the code is exported. Each rule is overloaded and applied run-time, without the need of compilation. Each user’s model may include the mathematical description, code generation rules and high level logic that should be intrinsic to such a rule—for example, exporting a <span><span>Hessian as pattern instead of matrix</span></span>.</p>
+<p>Our research group is including <code>Mr.CAS</code> in a solver for optimal control problem with indirect methods, as interface for problems description <span class="citation">(Biral, Bertolazzi, and Bosetti 2016)</span>.</p>
+<p>As a long term ambitious impact, this library will become a complete CAS for <span><em>Ruby</em></span> language, filling the empty space reported by <em>SciRuby</em> for symbolic math engines.</p>
+<h1 id="sec:conclusions">Conclusions</h1>
+<p>This work presents a pure <span><em>Ruby</em></span> library that implements a minimalistics CAS with automatic and symbolic differentiation that is aimed at code generation and meta-programming. Although at an early developing stage, <span><em>Mr.CAS</em></span> has promising feature, some of them shown in Section [sec:examples]. Also, this is the only gem that implements symbolic manipulation for this language.</p>
+<p>Language features and lack of dependencies simplify the use of the module as interface, extending model definition capabilities for numerical algorithms. All core functionalities and basic mathematics are defined, with the plan to include more features in next releases. Reopening a class guarantees a <em>liquid</em> behaviour, in which users are free to modify core methods at their needs.</p>
+<p>Library is published in <em>rubygems.org</em> repository and versioned on <em>github.com</em>, under MIT license. It can be included easily in projects and in inline interpreter, or installed as a standalone gem.</p>
+<h1 id="sec:version-dev" class="unnumbered">Current code version</h1>
+<table>
+<caption>Code metadata (mandatory)<span data-label="tab:code-metadata"></span></caption>
+<thead>
+<tr class="header">
+<th align="left"><strong>Nr.</strong></th>
+<th align="left"><strong>Code metadata description</strong></th>
+<th align="left"><strong>Please fill in this column</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">C1</td>
+<td align="left">Current code version</td>
+<td align="left">0.2.7</td>
+</tr>
+<tr class="even">
+<td align="left">C2</td>
+<td align="left">Permanent link to code/repository used for this code version</td>
+<td align="left"><a href="https://github.com/ElsevierSoftwareX/SOFTX-D-17-00013">github.com/ ElsevierSoftwareX/SOFTX-D-17-00013</a></td>
+</tr>
+<tr class="odd">
+<td align="left">C3</td>
+<td align="left">Legal Code License</td>
+<td align="left">MIT</td>
+</tr>
+<tr class="even">
+<td align="left">C4</td>
+<td align="left">Code versioning system used</td>
+<td align="left"><em>git</em> (GitHub)</td>
+</tr>
+<tr class="odd">
+<td align="left">C5</td>
+<td align="left">Software code languages, tools, and services used</td>
+<td align="left"><span><em>Ruby</em></span> language</td>
+</tr>
+<tr class="even">
+<td align="left">C6</td>
+<td align="left">Compilation requirements, operating environments</td>
+<td align="left"><span><em>Ruby</em></span> <span class="math inline">\(\geq 2.x\)</span></td>
+</tr>
+<tr class="odd">
+<td align="left">C7</td>
+<td align="left">If available Link to developer documentation/manual</td>
+<td align="left"><a href="http://www.rubydoc.info/gems/Mr.CAS">rubydoc.info/gems/Mr.CAS</a></td>
+</tr>
+<tr class="even">
+<td align="left">C8</td>
+<td align="left">Support email for questions</td>
+<td align="left"><a href="mailto:info@ragni.me">info@ragni.me</a></td>
+</tr>
+</tbody>
+</table>
+<div id="refs" class="references">
+<div id="ref-bartholomew2000automatic">
+<p>Bartholomew-Biggs, Michael, Steven Brown, Bruce Christianson, and Laurence Dixon. 2000. “Automatic Differentiation of Algorithms.” <em>Journal of Computational and Applied Mathematics</em> 124 (1). Elsevier: 171–90.</p>
+</div>
+<div id="ref-symbolic">
+<p>Bayramgalin, Ravil. 2012. “Symbolic.” <em>GitHub Repository</em>. <a href="https://github.com/brainopia/symbolic" class="uri">https://github.com/brainopia/symbolic</a>; GitHub.</p>
+</div>
+<div id="ref-biral2016notes">
+<p>Biral, Francesco, Enrico Bertolazzi, and Paolo Bosetti. 2016. “Notes on Numerical Methods for Solving Optimal Control Problems.” <em>IEEJ Journal of Industry Applications</em> 5 (2). J-Stage: 154–66.</p>
+</div>
+<div id="ref-Butcher20081">
+<p>Butcher, J.C. 2008. <em>Numerical Methods for Ordinary Differential Equations, Second Edition</em>. <em>Numerical Methods for Ordinary Differential Equations, Second Edition</em>. doi:<a href="https://doi.org/10.1002/9780470753767">10.1002/9780470753767</a>.</p>
+</div>
+<div id="ref-symengine">
+<p>Certik, Ondrej, Dale Lukas Peterson, Thilina Bandara Rathnayake, and others. 2016. “SymEngine.” <em>GitHub Repository</em>. <a href="https://github.com/symengine/symengine.rb" class="uri">https://github.com/symengine/symengine.rb</a>; GitHub.</p>
+</div>
+<div id="ref-cohen2003computer">
+<p>Cohen, Joel S. 2003. <em>Computer Algebra and Symbolic Computation: Mathematical Methods</em>. Universities Press.</p>
+</div>
+<div id="ref-flanagan2008ruby">
+<p>Flanagan, David, and Yukihiro Matsumoto. 2008. <em>The Ruby Programming Language</em>. O’Reilly Media, Inc.</p>
+</div>
+<div id="ref-higham2002accuracy">
+<p>Higham, N. 2002. <em>Accuracy and Stability of Numerical Algorithms</em>. Society for Industrial; Applied Mathematics.</p>
+</div>
+<div id="ref-iso30170">
+<p>“ISO/IEC 30170 – Information technology – Programming languages – Ruby.” 2000. Standard. Vol. 2012. Geneva, CH: International Organization for Standardization.</p>
+</div>
+<div id="ref-rucas">
+<p>Lees-Miller, John. 2010. “RuCas.” <em>GitHub Repository</em>. <a href="https://github.com/jdleesmiller/rucas" class="uri">https://github.com/jdleesmiller/rucas</a>; GitHub.</p>
+</div>
+<div id="ref-christopher_smith_2016_47274">
+<p>Smith, Christopher, Aaron Meurer, Mateusz Paprocki, and others. 2016. “SymPy 1.0.” https://doi.org/10.5281/zenodo.47274.</p>
+</div>
+<div id="ref-tanaka2015mruby">
+<p>Tanaka, Kazuaki, Avinash Dev Nagumanthri, and Yukihiro Matsumoto. 2015. “Mruby–Rapid Software Development for Embedded Systems.” In <em>15th International Conference on Computational Science and Its Applications (Iccsa)</em>, 27–32. IEEE.</p>
+</div>
+<div id="ref-tolsma1998computational">
+<p>Tolsma, John E, and Paul I Barton. 1998. “On Computational Differentiation.” <em>Computers &amp; Chemical Engineering</em> 22 (4). Elsevier: 475–90.</p>
+</div>
+<div id="ref-van2011python">
+<p>Van Rossum, Guido, and Fred L Drake. 2011. <em>The Python Language Reference Manual</em>. Network Theory Ltd.</p>
+</div>
+<div id="ref-von2013modern">
+<p>Von Zur Gathen, Joachim, and Jürgen Gerhard. 2013. <em>Modern Computer Algebra</em>. Cambridge university press.</p>
+</div>
+<div id="ref-wachter2006">
+<p>Wächter, Andreas, and Lorenz T. Biegler. 2006. “On the Implementation of an Interior-Point Filter Line-Search Algorithm for Large-Scale Nonlinear Programming.” <em>Mathematical Programming</em> 106 (1): 25–57.</p>
+</div>
+<div id="ref-wachter2009ipopt">
+<p>Wächter, Andreas, and Carl Laird. 2009. “IPOPT-an Interior Point Optimizer.” <a href="https://projects.coin-or.org/Ipopt" class="uri">https://projects.coin-or.org/Ipopt</a>.</p>
+</div>
+<div id="ref-weideman2002numerical">
+<p>Weideman, J André C. 2002. “Numerical Integration of Periodic Functions: A Few Examples.” <em>The American Mathematical Monthly</em> 109 (1). JSTOR: 21–36.</p>
+</div>
+</div>
+<div class="footnotes">
+<hr />
+<ol>
+<li id="fn1"><p>Minimalistic Ruby Computer Algebra System<a href="#fnref1">↩</a></p></li>
+<li id="fn2"><p><code>gem install Mr.CAS</code><a href="#fnref2">↩</a></p></li>
+<li id="fn3"><p>i.e.: <span class="math inline">\(\sqrt{\phi(\cdot)} - \sqrt{\psi(\cdot)} =
+\dfrac{\phi(\cdot) - \psi(\cdot)}{\sqrt{\phi(\cdot)} + \sqrt{\psi(\cdot)}}\)</span><a href="#fnref3">↩</a></p></li>
+<li id="fn4"><p><a href="http://bit.ly/Mr_CAS_examples" class="uri">http://bit.ly/Mr_CAS_examples</a><a href="#fnref4">↩</a></p></li>
+</ol>
+</div>
+</div>
+</body>
+</html>

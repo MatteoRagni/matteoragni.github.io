@@ -1,0 +1,370 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <meta http-equiv="Content-Style-Type" content="text/css" />
+  <meta name="generator" content="pandoc" />
+  <meta name="author" content="Amedeo Setti, Paolo Bosetti and Matteo Ragni" />
+  <title>ARTool - Augmented Reality Platform for Machining Setup and Maintenance</title>
+  <style type="text/css">code{white-space: pre;}</style>
+  <link href="https://fonts.googleapis.com/css?family=Lato:300,400|Roboto+Slab" rel="stylesheet">
+  <link rel="stylesheet" href="../style.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML" type="text/javascript"></script>
+</head>
+<body>
+<div id="header">
+<h1 class="title"><span><strong>AR</strong><span>Tool</span></span> - Augmented Reality Platform for Machining Setup and Maintenance</h1>
+<h2 class="author">Amedeo Setti, Paolo Bosetti and Matteo Ragni</h2>
+</div>
+<div id="abstract">
+<h4>Abstract</h4>
+<p>In manufacturing applications, setup and part-program verification on CNC machine tools is a time-consuming and error-prone operation, whose costs are especially relevant when dealing with small batches, custom components, and large/complex shapes. This paper presents an Augmented Reality application aimed at supporting machine tool operators in setting up the machining process, simplifying and quickening the identification of setup errors and misalignments.</p>
+<p>The paper firstly discusses the system architecture and its implementation, then presents a set of benchmark tests assessing system accuracy and reliability in ego-localization against an open-source AR library and an optical multistereoscopic motion capture ground-truth. Finally, the effectiveness of the proposed solution on the typical part-program setup workflow is assessed by comparison with a standard in-air part-program execution and evaluated by means of a NASA TLX test campaign.</p>
+</div>
+<div id="body">
+<h1 id="sec:introduction">Introduction</h1>
+<p>In the analysis of machining operation economics, several factors have to be considered for an efficient process. Different costs authorities are involved in the creation of a single final component, and not all of them are relative to the actual machining operation. Indeed, the <em>total cost per part</em> is obtained by considering: <em>a.</em> machining cost (e.g. effective operation, maintenance, man-hours), <em>b.</em> cost for setup machining (e.g. mounting cutters, setting fixtures, testing part-program), <em>c.</em> cost of loading and unloading, and <em>d.</em> tooling costs <span class="citation">(Gilbert 1950; Kalpakjian, Schmid, and Kok 2008)</span>.</p>
+<p>There is a direct correlation between time and machining costs. Thus, optimizing the process it is fundamental to reduce inactivity due to maintenance and setup time, in particular when human operators are in charge of loading and fixing the workpiece, which is typically the case for small lot productions and for shopfloors with limited automation.</p>
+<p>This paper introduces the <span><strong>AR</strong><span>Tool</span></span> platform, that exploits Augmented Reality (AR) and Virtual Reality (VR) to reduce non-productive time due to fixing of blank workpiece in the working area and to the whole machining setup in general. When workpiece fixturing is performed by operators, errors may arise. In this case to and for avoiding catastrophic collisions, in air-tests—e.g. with tool away from workpiece—are performed to verify the setup.</p>
+<p>The proposed application uses states and references provided by the machine tool computer numerical controller (CNC) to render a simulation of the workpiece blank, the fixtures, the machine components, and their movements within the working area. This rendered 3-D simulation is overimposed to a realtime camera capture of the same scene, matching the camera and simulation reference frames. The resulting Augmented Reality view allows the operator to quickly and effectively check for collisions and fixing errors, that become visually evident. When this setup is implemented on a personal device—e.g. tablet, smartphone or even HMD—it allows to check the real system from different angles, which is the main benefit in augmented human-machine interfaces.</p>
+<p>The same technology is also used to implement a set of related functionalities, such as interactive manuals and schematics, thus reducing inactivity time due to maintenance, even in the case of inexperienced operators.</p>
+<h2 id="sub:AR_new_vision_in_manufacturing">AR, new vision in manufacturing</h2>
+<p>During Hannover Messe 2010, the <em>Deutsche Forschungszentrum f<span>ü</span>r K<span>ü</span>nstliche Intelligenz</em> conducted a survey that revealed the strong interest of companies in the application of AR technologies for industrial purpose. In particular, of the 54 industrial representatives that were interviewed envisioned the use of AR applications in their production line <span class="citation">(Schaumlöffel et al. 2011)</span>.</p>
+<p>Looking at recent literature, there is evidence of significant efforts related to such technology, both from technological and cognitive point of view. In <span class="citation">(X. Wang, Love, et al. 2013)</span>, the Building Information Modeling (BIM) is enlarged in such a way to accommodate all the informational aspects of augmented reality to better model a building lifecycle, from construction to disposal. This is not a mere informational improvement: in fact, from a cognitive workload perspective <span class="citation">(Hou et al. 2013)</span>, operators will also benefit from the use of new instruments based on augmentation. Different papers address implementations of such techniques for different industrial and educational applications <span class="citation">(Novak-Marcincin, Barna, et al. 2013)</span>, however many of them may be referred as proof-of-concept prototypes, more than proof-of-benefit ones <span class="citation">(X. Wang, Kim, et al. 2013)</span>.</p>
+<h2 id="sub:recent_works">Recent works</h2>
+<p>Different works introduced the application of AR in manufacturing, and some applications are reported in this introduction, whilst conceptual works are mainly resumed in <span class="citation">(Ong and Nee 2013; Ma et al. 2011)</span>.</p>
+<p>AR and VR may be employed as constructive instruments <span class="citation">(Fiorentino et al. 2014; Di Gironimo, Mozzillo, and Tarallo 2013)</span>, and final products are structured information that will be used for educational purpose or as support for multimedia manuals. Implementations are mainly desktop setups. The same concepts influenced new way of teaching civil engineering, using tabletops <span class="citation">(Dong et al. 2013)</span>.</p>
+<p>Papers <span class="citation">(Hou et al. 2013; Wang, Ong, and Nee 2013)</span> present first implementation of virtual assembly interfaces. Cameras are used to detect position of operator hands, that are the Human Computer Interface (HCI) for the augmented renderer. Systems are desktop static prototypes, but usability is validated with respect to non–augmented real–case–scenario. Evidence of cognitive workload reduction for the operator are underlined, as also reduced time to complete tasks and reduced mean error rate.</p>
+<p>In <span class="citation">(Novak-Marcincin, Janak, et al. 2013)</span>, AR is employed in programming robotic manipulators. Scene is displayed on a semi reflective glass, and parallax error is corrected by tracking the observer’s gaze. The setup consists in a static desktop solution, that does not allow to benefit from the superposition of the rendered object from a different point-of-view. This is one of the first works that presented a real prototype aimed at helping in industrial process setup. Other applications focused instead on active maintenance, using OCR (Optical Character Recognition) in combination with localization markers <span class="citation">(Martínez, Laukkanen, and Mattila 2013)</span>, but real benefits of such implementations to users were not assessed. In <span class="citation">(Wójcicki 2014)</span>, it is worth noting the use of handheld devices, with respect to the typical static desktop setups seen in previous works.</p>
+<p>In <span class="citation">(Bondrea and Petruse 2013)</span>, AR technology is introduced in production line to facilitate industrial development. An application for quality assurance and quality control is showed, as constitutive part in a mock-up for a real assembly line. Even if all applications recognize the importance of authoring tools, this is something unimplemented or not mentioned at all.</p>
+<h2 id="sub:paper_structure">Paper structure</h2>
+<p>In section [sec:description], concept design of the <span><strong>AR</strong><span>Tool</span></span> platform will be described with a top–down approach: starting from a general overview, implementations of the single aspects and their motivations are analyzed. In section [library-benchmarking], a benchmark for original and proprietary marker detection library <span><code>ARSceneDetector</code> </span>, is performed against the well known <span><code>ARUCO</code></span> library <span class="citation">(Munoz-Salinas 2012)</span>. Finally, in section [sec:cognitive], an assessment of usability of <span><strong>AR</strong><span>Tool</span></span> for collision detection is reported.</p>
+<h1 id="sec:description">Platform Description</h1>
+<p><span><strong>AR</strong><span>Tool</span></span> is a platform for reducing costs related to process setup and maintenance time of machining processes performed on CNC machine tools. The two scenarios in which <span><strong>AR</strong><span>Tool</span></span> proves more effective are:</p>
+<ul>
+<li><p>reducing the setup time (e.g. testing of new part-program) and fixture time (e.g. fixturing of a new bulk into working area and checking for fixtures positions and undesired collisions);</p></li>
+<li><p>reducing the maintenance time by supporting failure diagnosis and discovery, remote and assisted maintenance, and ticketing for technical support and rapid spare parts supply.</p></li>
+</ul>
+<h2 id="informational-flow-explained">Information Flow Explained</h2>
+<p>As outlined in Fig. [fig:general-overview], the information flow involves a set of nodes: authoring tools, storage and distribution of machine state and diagnostics, shopfloor systems (machines and operators personal devices), and Internet-connected services provided by the machine tool manufacturer.</p>
+<div class="figure">
+<img src="./images/general_overview.png" alt="General overview and information flow" />
+<p class="caption">General overview and information flow<span data-label="fig:general-overview"></span></p>
+</div>
+<p>There are two agents mainly responsible for the authoring of information: the machine tool manufacturer and the shopfloor technical office. The machine manufacturer feeds all the information necessary for system description and diagnostics in the machine PLM (Product Lifecycle Management) database. Such data may be directly integrated at CAD level, using plugins for common CAE environments <span class="citation">(Systems 2016; PTC Inc. 2016)</span>, that generalize actual tools to accomodate AR data. The second agent is the shopfloor technical office, which is responsible for mantaining the database of tooling and machine elements that will be projected in AR. Also, this agent may insert custom maintenance data, workpiece and fixtures geometries.</p>
+<p>Machine manufacturers shall use a CDN (content delivery network) to deploy up-to-date versions of machine manuals, run a web store for spare parts, and provide a ticketing web interface to allow users to request advanced technical support. In such a way, <span><strong>AR</strong><span>Tool</span></span> opens new communication channels between user and vendor, and guarantees new marketing opportunities for machine producers.</p>
+<p>The machine tool/shopfloor network incorporates a SCADA (Supervisory Control And Data Acquisition) server for assets data centralization, query of machines states and diagnostics, and distribution of the localized information to user device. The SCADA also acts as a gateway and is responsible for the local deployment of updated diagnostics information coming from manufacturer to machines. The latter task is necessary given that shop floor networks are normally isolated from the Internet.</p>
+<p>Each CNC machine is equipped with a client—either an embedded system or a software service—that reports machine state, simulated part-program hooks, reference systems table, tools table and diagnostic information to SCADA server.</p>
+<p>Finally, shop floor operators are equipped with tablet systems providing the most preminent functionality of the whole <span><strong>AR</strong><span>Tool</span></span> system. As for now, tablet computers are the more reliable and low-cost system equipped with sensors (camera and accelerometer) that are sufficient for accurate ego-localization with respect to the surrounding environment.</p>
+<h2 id="user-device">User device</h2>
+<p>User devices are systems capable of performing ego-localization thanks to embedded camera and IMU. Localization is performed in indoor environment. Due to strict precision requirements in placing assets, the algorithm uses external markers to provide localization with the necessary accuracy and precision. Markers guarantee to the system the ability to identify a <em>scene</em> (cfr. description of scene in section [library-benchmarking]).</p>
+<p>Scene identification is used to perform a contextualized query to the SCADA system, and then the scene is populated using the ego-localization transformation matrix. Following this procedure, when in <em>setup mode</em>, <span><strong>AR</strong><span>Tool</span></span> is able to present the machine tool operator with the following information:</p>
+<ul>
+<li><p>bulk model and possibly fixtures models;</p></li>
+<li><p>spindle head and tool—or even mechanical axes simulacra—with respect to simulated trajectory;</p></li>
+<li><p>reference systems;</p></li>
+<li><p>the complete toolpath;</p></li>
+<li><p>distances between markers and location of markers w.r.t. the active reference frame;</p></li>
+<li><p>subsidiary text and element description.</p></li>
+</ul>
+<p>Figures [fig:artool_screenshot] and [fig:images_IMG_1545] show a screenshot of the <span><strong>AR</strong><span>Tool</span></span> iPad app and of the same app when used by a machine tool operator in setting up a machining program.</p>
+<div class="figure">
+<img src="images/screenshot.jpg" alt="Screenshot of ARTool iPad app, showing the setup-mode augmented reality view. In this case, three markers are used for measuring distances, while the central one provides ego-localization to the device camera and its position provides the reference for rendering the tool holder, the block-form, and the toolpath (as a sequence of white dots)" />
+<p class="caption">Screenshot of <span><strong>AR</strong><span>Tool</span></span> iPad app, showing the setup-mode augmented reality view. In this case, three markers are used for measuring distances, while the central one provides ego-localization to the device camera and its position provides the reference for rendering the tool holder, the block-form, and the toolpath (as a sequence of white dots)<span data-label="fig:artool_screenshot"></span></p>
+</div>
+<p>Moreover, when <span><strong>AR</strong><span>Tool</span></span> is in <em>maintenance mode</em> it can show:</p>
+<ul>
+<li><p>maps for machine failure localization;</p></li>
+<li><p>informative geometry—e.g. arrows and other geometric primitives to emphasize a region of interest;</p></li>
+<li><p>manual pages;</p></li>
+<li><p>contextual web pages of machine constructor and ticketing service.</p></li>
+</ul>
+<p>The <span><strong>AR</strong><span>Tool</span></span> client application runs on Apple iPad 2 Air tablet, with iOS 9.3 operating system, and it is written in <code>Swift</code>, <code>Objective-C</code> and <code>C++</code> languages. Rendering task are performed using the Apple-provided system framework <code>SceneKit</code> <span class="citation">(Apple Inc. 2016)</span>.</p>
+<h2 id="the-scada-and-permachine-server">The SCADA and per-machine server</h2>
+<p>The main functionality of SCADA are the deployment of assets to final users, and the quering the machine tool controller for the following information:</p>
+<ul>
+<li><p>machine state: axes positions, active reference system, active tool and loaded part-program;</p></li>
+<li><p>interpolated axes movement: each machine has its own part-program parser and interpolator; the result of interpolator are tool trajectories described by points sampled with with a typical frequency (), that will be used by <span><strong>AR</strong><span>Tool</span></span> to render the position of tool, spindle, and axes envelopes/simulacra;</p></li>
+<li><p>tables of reference systems and tool list, that are used to load solid models of tools and to render their simulacra within the AR view with respect to correct origins;</p></li>
+<li><p>diagnostic information are finally displayed on devices for guiding and assisting operators in identifing failure causes and solutions.</p></li>
+</ul>
+<p>SCADA is also used to serve web app and libraries for authoring internal maintenance procedures—e.g. marker library is used inside the server to provide marker identification from static images. The CDN is able to distribute assets and transformation matrices with respect to a reference marker.</p>
+<p>In our prototyping setup, the server is a software written in <code>Ruby</code> and <code>C++</code>, while database is made by a set of <code>YAML</code> files, to ease up inspection and debugging. The server also provides an <code>HTML5</code> authoring web application.</p>
+<div class="figure">
+<img src="images/IMG_1545.JPG" alt="A machine tool operator using ARTool for checking a part-program" />
+<p class="caption">A machine tool operator using <span><strong>AR</strong><span>Tool</span></span> for checking a part-program<span data-label="fig:images_IMG_1545"></span></p>
+</div>
+<h1 id="marker-library-description">Marker library description</h1>
+<p>It is evident that a precise and reliable realtime ego-localization of user point-of-view with respect to environment is a critical aspect for the application. During the early development stage, <span><strong>AR</strong><span>Tool</span></span> used <span><code>ARUCO</code></span> library, which is bundled in the <span><code>OpenCV</code> </span> <span class="citation">(Bradski and others 2000)</span> framework, for markers detection and localization. That framework was selected after comparison with the <span><code>ArtoolKit</code> </span> <span class="citation">(Kato 2002)</span> platform, after realizing that the former provided better efficiency and responsiveness, although at the price of a lower accuracy.</p>
+<p>Later on in the <span><strong>AR</strong><span>Tool</span></span> development, and in order to improve both efficiency and accuracy, the <span><code>ARSceneDetector</code> </span>library has been developed from scratch. In this section, the <span><code>ARSceneDetector</code> </span>library is introduced and its performance is evaluated in terms of computational efficiency and ego-localization accuracy.</p>
+<p>It is worth noting that in order to reach the precision required to get reliable positioning and representation of virtual assets overlaid on the camera image while maintaining realtime capabilities, the library is making use of hardware acceleration and architecture specific instructions, and its performance is thus platform-dependent.</p>
+<h2 id="artoolscene-library-structure"><span><code>ARSceneDetector</code> </span>library structure</h2>
+<div class="figure">
+<img src="./images/markerlib.png" alt="Library structure. ARSD stands for ARSceneDetector . In gray, plugins that are disabled during benchmark" />
+<p class="caption">Library structure. ARSD stands for <span><code>ARSceneDetector</code> </span>. In gray, plugins that are disabled during benchmark<span data-label="fig:markerlib"></span></p>
+</div>
+<p>The <span><code>ARSceneDetector</code> </span>library is composed of three main layers: <em>a.</em> information gathering, the top layer, is written in <code>Swift</code> to use latest advances available for the iPad/iOS platform; <em>b.</em> information processing written in <code>C++</code> for compatibility with <span><code>OpenCV</code> </span>framework; <em>c.</em> <em>scene</em> reconstructor, a simple classifier that extracts the structure of the scene from marker relative position and orientation. As for now, due to some limitations in language interfacing, an <code>Objective-C++</code> glue-code bridge between <code>Swift</code> and <code>C++</code> layers allows information passing. A schematic is presented in Fig. [fig:markerlib].</p>
+<p>The <span><code>ARSceneDetector</code> </span>library is initialized by setting up camera matrix parameters <span class="citation">(Hartley and Zisserman 2003)</span>, threshold values for marker recognition, and other algorithms flags. It has to be remarked that threshold values are typically calibrated by automatic procedures that measures light values in standard operating conditions. All those data are saved in a configuration file, and are specific for the single device.</p>
+<p>Camera frames are retrieved at 720p or 1080p. Selecting different resolutions affects ego-localization frequency—from to respectively. Each captured frame goes through an image enhancement and edge detection algorithm, performed in GPU.</p>
+<p>Simultaneously, inertial measurements are retrieved from the IMU device. Those information are used to stabilize <span class="citation">(Bleser and Stricker 2009)</span> the view of final rendered assets overlaid on the camera image. The scene information is coordinated across devices by the SCADA server. Crossing the Objective-C++ glue-code bridge, scene and IMU data are stored in container classes and passed to a marker geometry detection algorithm. Each camera frame is elaborated for extracting square convex shapes that may be a candidate for a marker. The <code>ARSD Tracker</code> is a plugin to the standard, one-frame-at-a-time algorithm that also integrates results from the previously elaborated frame, in order to reduce the image area where to search for square shapes, thus reducing the computation time. When the plugin is enabled, the algorithm maintains awareness of marker positions (which are updated at every frame), while the search of new markers by scanning the whole camera image is performed at a reduced frequency (configurable, typically every 10 frames). When possible, platform-dependent Single Instruction Multiple Data (SIMD) operations are used for improving computational efficiency. Finally inertial measurements, when available, are used to improve the capabilities of localization and filtering vibrations in rendering.</p>
+<p>When square shapes are identified, their pose is estimated using the camera matrix specified in configuration. Actually, different algorithms for pose estimation are implemented and currently under testing, such as <span class="citation">(Lowe 1991; Schweighofer and Pinz 2006)</span>. Each marker gets associated with a transformation matrix, with respect to the camera point of view. Those information are used to enrich the <em>General Scene Container</em> structure, used by the tracker.</p>
+<p>Finally, the identified scene is reconstructed in the very last layer of the library. In this context, a <em>scene</em> is a combination of structured markers, joined together to achieve better accuracy in ego-localization. In particular, a <em>scene</em> can be represented by:</p>
+<ul>
+<li><p>a simple single marker;</p></li>
+<li><p>a board of co-planar markers, with parallel <span class="math inline">\(\hat{z}\)</span> axes;</p></li>
+<li><p>a board of markers, with parallel <span class="math inline">\(\hat{z}\)</span> axes, and known, non-zero offset in <span class="math inline">\(\hat{z}\)</span> direction;</p></li>
+<li><p>a board of three markers with mutually orthogonal <span class="math inline">\(\hat{z}\)</span> axes, with known offset vectors;</p></li>
+<li><p>a solid cube of markers.</p></li>
+</ul>
+<p>Markers can contain a numeric binary code, like the one encoded by <span><code>ARUCO</code></span>, or an image. The use of images requires a more demanding classification algorithm, and is consequently used more rarely.</p>
+<p>Usually, the SCADA server is responsible to provide <em>scene</em> definitions, but the library is also able to build a new scene dynamically by <em>chaining transformations</em> between a known marker and a new unknown/unexpected one. This feature is important if the user wants to extend rendered space to a volume in which no markers are currently visible. Marker chains can be created by framing with the camera of one or more new markers. It is evident that the positioning uncertainty of every marker added to the chain is proportional to the chain length, i.e. to the number of markers separating the newly added one from the last marker whose position is known by the server.</p>
+<p>Once the scene is reconstructed, the <em>General Scene Container</em> is passed to renderer, which in turn overlays the virtual assets on the captured frame.</p>
+<h2 id="library-benchmarking">Library benchmarking</h2>
+<p>Performance of <span><strong>AR</strong><span>Tool</span></span> library has been benchmarked againts the well-known <span><code>ARUCO</code></span> library. The parameters under testing were:</p>
+<ul>
+<li><p>computational time;</p></li>
+<li><p>reliability in marker identification;</p></li>
+<li><p>accuracy in ego-localization.</p></li>
+</ul>
+<p>While the first two index are relative, the third one is absolute, assuming the reference ground-truth provided by a motion capture (MoCap) system (<em>OptiTrack</em>, equipped with <em>Prime13</em> cameras running at ). The same video was recorded from an iPad at , while a set of MoCap markers were attached to the iPad so that the iPad absolute position could be tracked and recorded by the MoCap during the test. The video clip was then fed to the two algorithms for benchmarking. Ego-localization results were synchronized to motion capture recordings by minimizing the variance of their differences with respect to signal shift in time. In more detail, given the signals:</p>
+<ul>
+<li><p><span class="math inline">\(x_{0}(k)\)</span> the <span class="math inline">\(x\)</span> coordinate returned by the motion capture at frame <span class="math inline">\(k\)</span></p></li>
+<li><p><span class="math inline">\(x_{A}(k)\)</span> the <span class="math inline">\(x\)</span> coordinate returned by the <span><strong>AR</strong><span>Tool</span></span> library at frame <span class="math inline">\(k\)</span></p></li>
+<li><p><span class="math inline">\(x_{B}(k)\)</span> the <span class="math inline">\(x\)</span> coordinate returned by the <span><code>ARUCO</code></span> library at frame <span class="math inline">\(k\)</span></p></li>
+</ul>
+<p>the distance <span class="math inline">\(\varepsilon_{x}(k,s)\)</span> is evaluated as: <span class="math display">\[\varepsilon_{x}(k,s) = 2x_{0}(k) - \left( (x_{A}(k+s) + x_{B}(k+s) \right)\]</span> while the variance <span class="math inline">\(\nu_{x}(s)\)</span> with respect to the shift <span class="math inline">\(s\)</span> on the <span class="math inline">\(x\)</span> signal is obtained as: <span class="math display">\[\nu_{x}(s) = E\left[ \varepsilon_{x}(k,s) - E\left[\varepsilon_{x}(k,s) \right] \right]\]</span></p>
+<p>Consequently, the time-shift to be used for aligning the signals is the result of: <span class="math display">\[s^{*} = \underset{s}{\mathrm{arg}}\,\mathrm{min}\sum_{i=\left\{x,y,z\right\}}{\nu_{i}(s)}\]</span> Position signal are used because more reliable with respect to the others.</p>
+<p>To make a fair comparison, some plugins of <span><strong>AR</strong><span>Tool</span></span> library are disabled, and are highlighted in gray in Fig. [fig:markerlib]. In this way, the performance of the <span><strong>AR</strong><span>Tool</span></span> library is significantly degraded w.r.t. its optimal configuration, but the resulting differences to <span><code>ARUCO</code></span> are only due to the algorithms and their implementation rather than to different input data processing/filtering.</p>
+<p><img src="./images/pos_3d.png" title="fig:" alt="3D representation of ego-localization results. Position, code and orientation of markers are reported. Note that the ARUCO library sometimes loses the tracking and this is marked by jumps/skips in the red trajectory" /> [fig:pos-3d]</p>
+<p><img src="images/artool_pos_x.png" alt="image" /> <img src="images/artool_ang_a.png" alt="image" /> <img src="images/artool_pos_y.png" alt="image" /> <img src="images/artool_ang_b.png" alt="image" /> <img src="images/artool_pos_z.png" alt="image" /> <img src="images/artool_ang_c.png" alt="image" /></p>
+<p>Setup parameters for both libraries were tuned to get the best possible results as a compromise between accuracy and reliability. In Fig. [fig:pos-3d], the benchmark trajectory is presented, with the positions of the markers in the scene. Some jumps are evident for the <span><code>ARUCO</code></span> library, and are due to unstability in the identification of the markers pose estimation. Note that between frames , <span><code>ARUCO</code></span> loses the position, and the resultant trajectory is a linear interpolation a posteriori between the last known state and the new one. This lack in identification explains the difference in accuracy reported in Tab. [tab:time-results].</p>
+<table>
+<caption>Libraries speed and reliability are compared. Speed is given in number of frames elaborated per seconds, while reliability is referred to the number of marker identified with respect to the total number of visible markers along the whole benchmarking video ()<span data-label="tab:time-results"></span></caption>
+<thead>
+<tr class="header">
+<th align="center"></th>
+<th align="center"><span><strong>AR</strong><span>Tool</span></span> </th>
+<th align="center"><span><code>ARUCO</code></span> </th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="center">Speed</td>
+<td align="center"></td>
+<td align="center"></td>
+</tr>
+<tr class="even">
+<td align="center">Reliability</td>
+<td align="center">()</td>
+<td align="center">()</td>
+</tr>
+</tbody>
+</table>
+<p><span><strong>AR</strong><span>Tool</span></span> library appears more reliable, never loosing ego-localization and showing a higher success rate in identifying markers. In Fig. [fig:error-analysis] the accuracy of the two libraries is also assessed. The charts show the nominal path as a black line as measured by the motion capture (in position on the left column, angles on the right one), while red and blue traces represent the errors, relative to the ground-truth, of values calculated by the <span><strong>AR</strong><span>Tool</span></span> and <span><code>ARUCO</code></span> library, respectively, whose vertical axis is on the right side. To the right of each chart a histogram reports the distribution of errors. It is interesting to notice that, for what concerns positions, the error distributions of <span><strong>AR</strong><span>Tool</span></span> appear to have a mode closer to zero and a narrower distribution, as reported in Tab. [tab:error-table].</p>
+<table>
+<tbody>
+<tr class="odd">
+<td align="right"></td>
+<td align="center"><span class="math inline">\(\mu\)</span></td>
+<td align="center"><span class="math inline">\(\sigma\)</span></td>
+<td align="center"><span class="math inline">\(k\)</span></td>
+<td align="center"><span class="math inline">\(\mu\)</span></td>
+<td align="center"><span class="math inline">\(\sigma\)</span></td>
+<td align="center"><span class="math inline">\(k\)</span></td>
+</tr>
+<tr class="even">
+<td align="right"><span class="math inline">\(x\quad(\si{mm})\)</span></td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+</tr>
+<tr class="odd">
+<td align="right"><span class="math inline">\(y\quad(\si{mm})\)</span></td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+</tr>
+<tr class="even">
+<td align="right"><span class="math inline">\(z\quad(\si{mm})\)</span></td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+</tr>
+<tr class="odd">
+<td align="right"><span class="math inline">\(\alpha\quad(\si{rad})\)</span></td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+</tr>
+<tr class="even">
+<td align="right"><span class="math inline">\(\beta\quad(\si{rad})\)</span></td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+</tr>
+<tr class="odd">
+<td align="right"><span class="math inline">\(\gamma\quad(\si{rad})\)</span></td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+</tr>
+</tbody>
+</table>
+<p>Regarding attitude estimation, even if the figures in Tab. [tab:error-table] suggest a better precision for <span><strong>AR</strong><span>Tool</span></span>, it appears evident from the top and central right histograms of Fig. [fig:error-analysis] that an error in both directions with respect to zero means hides a systematic error in attitude identification.</p>
+<h1 id="sec:cognitive">Usability assessment</h1>
+<p>To assess the advantages provided by such a new instrument to shopfloor operators, efficiency and impact on users workload has to be investigated. This section deals with the examination of the cognitive potentials of the proposed AR tool for part-program evaluation.</p>
+<p>The main hypotheses here taken into account were:</p>
+<ol>
+<li><p>compared to the common inspection method through in-air test of a new part-program (i.e. safe execution of part-program at an offset above the workpiece along the tool axis), the AR application reduces the number of errors in detecting collisions and misalignments;</p></li>
+<li><p>compared to the common inspection method through in-air test of a new part-program, the AR application reduces the time needed for detecting collisions and misalignments;</p></li>
+<li><p>by using the AR application for detecting collisions, the operative workload on user with respect to normal in-air test inspection is reduced.</p></li>
+</ol>
+<p>Hypothesis inference is made through experimental design, in which 24 participants aging from , mostly male <span class="citation">(Collins and Kimura 1997)</span>, with instruction level between B.Sc. and M.Sc. and with no deficits in spatial capabilities, have to identify the position of any possible collision between tool and other objects in the milling machine work area, while the procedure time is recorded.</p>
+<h2 id="tasks-definition">Tasks definition</h2>
+<p>The experimental task is to identify the position of collisions in a 5-axis milling machine (Deckel Maho DMU 60-T), between a cylindrical milling cutter and any other object, including workpiece. The identification is divided in two distinct procedures, proposed to participants according to a random sequence.</p>
+<ol>
+<li><p>Identify the presence of <strong>evident collisions</strong>—e.g. at least , half tool diameter—through observation of in-air execution of the part-program. Vertical offset is set to . participant can slow down, stop, or accelerate tool motion through the feed-rate override command on machine tool controller. Inversion of motion is not possible, but repetitions can be performed on request. The procedure is timed, and the participant is instructed to try and perform it as quickly as possible. The time needed for auxiliary machine operations—e.g. tool change and rapid movements—is not recorded.</p></li>
+<li><p>Identify presence of <strong>evident collisions</strong> by using an <span><strong>AR</strong><span>Tool</span></span> -equipped iPad. Users can control position of the simulated spindle head and tool using an on-screen slider. The application also renders the finished part simulacrum and the complete trajectory as a dotted trace. The user can freely move and orient the device around the workpiece. Spatially, simulated bulk and real bulk are overlapped. The procedure is timed, and has to be performed as quickly as possible.</p></li>
+</ol>
+<p>On completion of all the tasks, participants are asked to take a RAW NASA TLX survey. The RAW test is a modified version in which user evaluation is not scaled, and its use is suggested in the identification of cognitive workload with respect to the standard scaled test, when low physical workload is required <span class="citation">(Hart 2006)</span>.</p>
+<h2 id="part-program-description">Part program description</h2>
+<p>Three different part-program trajectories were proposed to participants during testing, and are described in Fig. [fig:part-program]:</p>
+<ol>
+<li><p>is a correct execution with no errors;</p></li>
+<li><p>there is a collision in corner D, along <span class="math inline">\(\hat{x}\)</span> axis, simulating a wrong definition for a variable in the part-program;</p></li>
+<li><p>there is a collision through the whole trajectory, along <span class="math inline">\(\hat{z}\)</span> axis, simulating a wrong zero definition.</p></li>
+</ol>
+<p>A collision may be located in one of the eight cardinal points of the <span class="math inline">\(\hat{x}\times\hat{y}\)</span> plane, in any arbitrary direction. Part-programs are identical on milling machine and on <span><strong>AR</strong><span>Tool</span></span> device, but those trajectories are provided randomly to each participant, thus, in-air and AR trajectory can be different.</p>
+<div class="figure">
+<img src="./images/part_program.png" alt="Visualization of the three test part-programs. Test 1 is without collisions, while test 2 contains a collision in \hat{x} direction, and test 3 collide through the whole trajectory due to a \hat{z} shift" />
+<p class="caption">Visualization of the three test part-programs. <em>Test 1</em> is without collisions, while <em>test 2</em> contains a collision in <span class="math inline">\(\hat{x}\)</span> direction, and <em>test 3</em> collide through the whole trajectory due to a <span class="math inline">\(\hat{z}\)</span> shift<span data-label="fig:part-program"></span></p>
+</div>
+<h2 id="results">Results</h2>
+<p>For what concerns the hypothesis H.1, test results are quite evident. None of the participants made a complete correct collision forecast with the simple observation of the in-air part-program. Conversely, by using the <span><strong>AR</strong><span>Tool</span></span> device participants correctly identified collisions. This is an noteworthy result for users that are unexperienced both in the use of AR and of machine tools. For what concerns the hypothesis H.2, the times required for identification of collisions in both methods are comparable. In this case it is not conceivable to reject the null hypothesis—<span> </span>providing a <em>p</em>-value of . It must be noted that timing for in-air tests only considers interpolated axes movement (<code>G01</code>/<code>G02</code>/<code>G03</code>), and not for rapid ones (<code>G01</code>), nor tool-changing axes maneuvers.</p>
+<p>RAW NASA TLX also gives some important results regarding target self-evaluation. In fact, users were requested to answer the following questions, with a score from :</p>
+<ul>
+<li><p>perceived mental demand,</p></li>
+<li><p>perceived temporal demand,</p></li>
+<li><p>required effort,</p></li>
+<li><p>perceived performance,</p></li>
+<li><p>frustration in performing the task.</p></li>
+</ul>
+<div class="figure">
+<img src="./images/nasa_scored.png" alt="Mean scores for RAW NASA TLX test" />
+<p class="caption">Mean scores for RAW NASA TLX test<span data-label="fig:nasa-scores"></span></p>
+</div>
+<p>Each participant was required to answer the RAW NASA TLX test both for the AR task and for the in-air execution task. participants perceived AR tasks simpler to perform from a cognitive workload point-of-view. Also, frustration in performing is reduced, and perceived time request is reduced. From a cognitive workload point-of-view, this result shows an evident benefit from the introduction of <span><strong>AR</strong><span>Tool</span></span> in manufacturing—at least for the case of unexperienced users—increasing the self-confidence in the operation of the machine tool. Users’ mean scores are reported for reference in Fig. [fig:nasa-scores].</p>
+<h1 id="conclusions-secconclusions">Conclusions [sec:conclusions]</h1>
+<p>This paper presents a novel Augmented Reality software system for supporting operators of CNC machine tools in setting up and checking for errors in part-programs. The proposed system exploits the overlaying on the camera imaging of a portable device (an Apple iPad) of solid models and information representing the workpiece shape and position, part-program data, and the CNC setup (reference systems, toolpaths, etc.) Any mismatch between the real image and the overlaid 3-D scene is easily perceived by the user, which can thus <em>quickly</em> and <em>reliably</em> spot errors in the part-program, misalignments, and wrong placement of components in the working volume. Such improvements in <em>speed</em> and <em>reliability</em> has been experimentally verified by asking subjects (all novices in machine tool operations <em>and</em> in augmented reality) to check for errors in different part-programs. The results show a significant reduction in task execution time, a huge improvement in reliability, and also a significant reduction of cognitive workload to the subjects themselves.</p>
+<p>These results have been obtained by using a custom developed system made of three components: an iOS app providing the user interface; an infrastructure of network services ensuring the synchronization and reliable matching between the CNC state and information structure and the user device; a custom library for high performance and high reliability ego-localization, named <span><strong>AR</strong><span>Tool</span></span>. The latter has ben benchmarked against similar solutions, and the benchmark results of the comparison between <span><strong>AR</strong><span>Tool</span></span> and the commonly used, state of the art <span><code>ARUCO</code></span> library are here proposed and discussed, showing how <span><strong>AR</strong><span>Tool</span></span> proves faster and more reliable when comparing the two libraries against a motion capture ground-truth.</p>
+<p>In the near future, Authors plan to improve the functionalities provided by the network services layer, to put under testing the whole workflow from the CAD-CAM generation of the part-program to the part-program setup and verification, and finally to assess the workflow improvement of the proposed system when used by professional machine tool operators (rather than novices as in the present case). Finally, application of the same software system for supporting maintenance operation of industrial machinery (including machine tools) is currently under development.</p>
+<div id="refs" class="references">
+<div id="ref-Apple:2016aa">
+<p>Apple Inc. 2016. “SceneKit Framework.” <a href="https://developer.apple.com/scenekit/" class="uri">https://developer.apple.com/scenekit/</a>.</p>
+</div>
+<div id="ref-bleser2009advanced">
+<p>Bleser, Gabriele, and Didier Stricker. 2009. “Advanced Tracking Through Efficient Image Processing and Visual–Inertial Sensor Fusion.” <em>Computers &amp; Graphics</em> 33 (1). Elsevier: 59–72.</p>
+</div>
+<div id="ref-bondrea2013augmented">
+<p>Bondrea, Ioan, and Radu Emanuil Petruse. 2013. “Augmented Reality-an Improvement for Computer Integrated Manufacturing.” In <em>Advanced Materials Research</em>, 628:330–36. Trans Tech Publ.</p>
+</div>
+<div id="ref-bradski2000opencv">
+<p>Bradski, Gary, and others. 2000. “The Opencv Library.” <em>Doctor Dobbs Journal</em> 25 (11). M AND T PUBLISHING INC: 120–26.</p>
+</div>
+<div id="ref-collins1997large">
+<p>Collins, David W, and Doreen Kimura. 1997. “A Large Sex Difference on a Two-Dimensional Mental Rotation Task.” <em>Behavioral Neuroscience</em> 111 (4). American Psychological Association: 845.</p>
+</div>
+<div id="ref-di2013virtual">
+<p>Di Gironimo, Giuseppe, Rocco Mozzillo, and Andrea Tarallo. 2013. “From Virtual Reality to Web-Based Multimedia Maintenance Manuals.” <em>International Journal on Interactive Design and Manufacturing (IJIDeM)</em> 7 (3). Springer: 183–90.</p>
+</div>
+<div id="ref-dong2013collaborative">
+<p>Dong, Suyang, Amir H Behzadan, Feng Chen, and Vineet R Kamat. 2013. “Collaborative Visualization of Engineering Processes Using Tabletop Augmented Reality.” <em>Advances in Engineering Software</em> 55. Elsevier: 45–55.</p>
+</div>
+<div id="ref-fiorentino2014augmented">
+<p>Fiorentino, Michele, Antonio E Uva, Michele Gattullo, Saverio Debernardis, and Giuseppe Monno. 2014. “Augmented Reality on Large Screen for Interactive Maintenance Instructions.” <em>Computers in Industry</em> 65 (2). Elsevier: 270–78.</p>
+</div>
+<div id="ref-gilbert1950economics">
+<p>Gilbert, WW. 1950. “Economics of Machining.” <em>Machining Theory and Practice</em>. American Society for Metals, Cleveland, 465–85.</p>
+</div>
+<div id="ref-hart2006nasa">
+<p>Hart, Sandra G. 2006. “NASA-Task Load Index (Nasa-Tlx); 20 Years Later.” In <em>Proceedings of the Human Factors and Ergonomics Society Annual Meeting</em>, 50:904–8. 9. Sage Publications.</p>
+</div>
+<div id="ref-hartley2003multiple">
+<p>Hartley, Richard, and Andrew Zisserman. 2003. <em>Multiple View Geometry in Computer Vision</em>. Cambridge university press.</p>
+</div>
+<div id="ref-hou2013using">
+<p>Hou, Lei, Xiangyu Wang, Leonhard Bernold, and Peter ED Love. 2013. “Using Animated Augmented Reality to Cognitively Guide Assembly.” <em>Journal of Computing in Civil Engineering</em> 27 (5). American Society of Civil Engineers: 439–51.</p>
+</div>
+<div id="ref-kalpakjian2008manufacturing">
+<p>Kalpakjian, Serope, Steven R Schmid, and Chi-Wah Kok. 2008. <em>Manufacturing Processes for Engineering Materials</em>. Pearson-Prentice Hall.</p>
+</div>
+<div id="ref-kato2002artoolkit">
+<p>Kato, Hirokazu. 2002. “ARToolKit: Library for Vision-Based Augmented Reality.” <em>IEICE, PRMU</em> 6: 79–86.</p>
+</div>
+<div id="ref-lowe1991fitting">
+<p>Lowe, David G. 1991. “Fitting Parameterized Three-Dimensional Models to Images.” <em>IEEE Transactions on Pattern Analysis &amp; Machine Intelligence</em>, no. 5. IEEE: 441–50.</p>
+</div>
+<div id="ref-ma2011virtual">
+<p>Ma, Dengzhe, Xiumin Fan, Jürgen Gausemeier, and Michael Grafe. 2011. <em>Virtual Reality &amp; Augmented Reality in Industry</em>. Springer.</p>
+</div>
+<div id="ref-martinez2013new">
+<p>Martínez, Héctor, Seppo Laukkanen, and Jouni Mattila. 2013. “A New Hybrid Approach for Augmented Reality Maintenance in Scientific Facilities.” <em>International Journal of Advanced Robotic Systems, Manuel Ferre, Jouni Mattila, Bruno Siciliano, Pierre Bonnal (Ed.), ISBN</em> 1729: 8806.</p>
+</div>
+<div id="ref-munoz2012aruco">
+<p>Munoz-Salinas, R. 2012. “ARUCO: A Minimal Library for Augmented Reality Applications Based on Opencv.” Universidad de Córdoba.</p>
+</div>
+<div id="ref-novak2013augmented">
+<p>Novak-Marcincin, Jozef, Jozef Barna, Miroslav Janak, and Ludmila Novakova-Marcincinova. 2013. “Augmented Reality Aided Manufacturing.” <em>Procedia Computer Science</em> 25. Elsevier: 23–31.</p>
+</div>
+<div id="ref-novak2013utilization">
+<p>Novak-Marcincin, Jozef, Miroslav Janak, Veronika Fečová, and Ludmila Novakova-Marcincinova. 2013. “Utilization of Augmented Reality Elements for Visualization of Operational States of Manufacturing Devices.” In <em>Applied Mechanics and Materials</em>, 308:111–14. Trans Tech Publ.</p>
+</div>
+<div id="ref-ong2013virtual">
+<p>Ong, Soh K, and Andrew Yeh Chris Nee. 2013. <em>Virtual and Augmented Reality Applications in Manufacturing</em>. Springer Science &amp; Business Media.</p>
+</div>
+<div id="ref-plm2016proe">
+<p>PTC Inc. 2016. “Product Lifecycle Management (PLM) Software.” <a href="http://www.ptc.com/product-lifecycle-management" class="uri">http://www.ptc.com/product-lifecycle-management</a>.</p>
+</div>
+<div id="ref-schaumloffel2011augmented">
+<p>Schaumlöffel, P, M Talha, D Gorecky, and G Meixner. 2011. “Augmented Reality Applications for Future Manufacturing.” <em>Proceedings of the 5th Manufacturing Science and Education-MSE</em> 1 (5): 2–5.</p>
+</div>
+<div id="ref-schweighofer2006robust">
+<p>Schweighofer, Gerald, and Axel Pinz. 2006. “Robust Pose Estimation from a Planar Target.” <em>Pattern Analysis and Machine Intelligence, IEEE Transactions on</em> 28 (12). IEEE: 2024–30.</p>
+</div>
+<div id="ref-bmd2016solidworks">
+<p>Systems, Dassault. 2016. “Solidworks Model Based Definitions.” <a href="http://www.solidworks.it/sw/products/technical-communication/packages.htm" class="uri">http://www.solidworks.it/sw/products/technical-communication/packages.htm</a>.</p>
+</div>
+<div id="ref-wang2013survey">
+<p>Wang, Xiangyu, Mi Jeong Kim, Peter ED Love, and Shih-Chung Kang. 2013. “Augmented Reality in Built Environment: Classification and Implications for Future Research.” <em>Automation in Construction</em> 32. Elsevier: 1–13.</p>
+</div>
+<div id="ref-wang2013conceptual">
+<p>Wang, Xiangyu, Peter ED Love, Mi Jeong Kim, Chan-Sik Park, Chun-Pong Sing, and Lei Hou. 2013. “A Conceptual Framework for Integrating Building Information Modeling with Augmented Reality.” <em>Automation in Construction</em> 34. Elsevier: 37–44.</p>
+</div>
+<div id="ref-wang2013augmented">
+<p>Wang, ZB, SK Ong, and AYC Nee. 2013. “Augmented Reality Aided Interactive Manual Assembly Design.” <em>The International Journal of Advanced Manufacturing Technology</em> 69 (5-8). Springer: 1311–21.</p>
+</div>
+<div id="ref-wojcicki2014supporting">
+<p>Wójcicki, Tomasz. 2014. “Supporting the Diagnostics and the Maintenance of Technical Devices with Augmented Reality.” <em>Diagnostyka</em> 15 (1): 43–47.</p>
+</div>
+</div>
+</div>
+</body>
+</html>
