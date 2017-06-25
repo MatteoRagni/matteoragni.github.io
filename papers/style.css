@@ -4,27 +4,38 @@
 <link rel="stylesheet" href="style.css">
 <script src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_CHTML-full" type="text/javascript"></script>
 */
+@import url('https://fonts.googleapis.com/css?family=Pathway+Gothic+One');
+
 * {
   font-family: 'Lato', sans-serif;
   font-weight: 300;
+  font-size: 16px;
 }
 
 body {
-  margin: 0;
+  margin: 0 auto;
   padding: 0;
 }
 
-#body {
-  margin-left: 10%;
-  margin-right: 10%;
+#body,
+#header,
+#abstract {
+  width: 100%;
+  margin: 0 auto;
+  padding-left: 10%;
+  padding-right: 10%;
+}
+#header {
+  padding: 0;
+  margin: 0 auto;
 }
 
 #abstract {
-  margin-left: 15%;
-  margin-right: 15%;
+  /*margin: 0 auto;
+  padding-left: 10%;
+  padding-right: 10%;*/
   color: gray;
   font-size: 0.8em;
-  padding: 10px;
 }
 
 img {
@@ -84,7 +95,7 @@ p,
 span.math-inline,
 li {
   text-align: justify;
-  line-height: 2.0;
+  line-height: 1.5;
   font-size: 1.5em;
 }
 
@@ -110,12 +121,11 @@ h3 { font-size: 1.8em; }
 h4 { font-size: 1.8em; }
 
 h1.title {
-  background-color: #eee;
+  font-family: 'Pathway Gothic One', sans-serif;
   text-align: center;
-  font-size: 2.5em;
-  padding: 10px;
+  font-size: 50px;
+  padding: 0;
   border: none;
-  margin: 0;
 }
 
 h2.author {
@@ -142,3 +152,10 @@ code {
 .citation { color: #0000e3; }
 
 strong { font-weight: normal !important; }
+
+@media screen and (min-width: 1280px) {
+    #body, #abstract  {
+        width: 1024px;
+        margin: 0 auto;
+    }
+}
