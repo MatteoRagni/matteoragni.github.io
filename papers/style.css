@@ -81,10 +81,15 @@ tr:first-child {
 }
 
 p,
-span.math-inline {
+span.math-inline,
+li {
   text-align: justify;
   line-height: 2.0;
   font-size: 1.5em;
+}
+
+li p {
+  font-size: 1em;
 }
 
 .references {
@@ -129,3 +134,11 @@ code {
   font-family: 'Fira Mono', monospace !important;
   color: #777;
 }
+
+.citation a {
+  text-decoration: none;
+}
+
+.citation { color: #0000e3; }
+
+strong { font-weight: normal !important; }
