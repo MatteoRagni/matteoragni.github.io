@@ -88,7 +88,7 @@ function sendMessage() {
     $("#submit").css("background-color", "#e7ce28");
     $("#submit span").html("Sending...");
     
-    $.post("http://mragni.altervista.org/respond.php", to_send).
+    $.post("https://mragni.altervista.org/respond.php", to_send).
       done(donePost).always(alwaysPost).fail(failPost);
   }
 }
