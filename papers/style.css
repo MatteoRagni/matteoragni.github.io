@@ -145,6 +145,8 @@ code {
   color: #777;
 }
 
+a, span, em { font-size: 1em; }
+
 .citation a {
   text-decoration: none;
 }
