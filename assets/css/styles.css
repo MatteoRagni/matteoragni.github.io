@@ -89,6 +89,10 @@ p {
 .sidebar-wrapper .profile {
   margin-bottom: 15px;
 }
+img.profile {
+  width: 200px;
+  
+}
 .sidebar-wrapper .contact-list .fa {
   margin-right: 5px;
   font-size: 18px;
@@ -126,6 +130,7 @@ p {
 }
 .sidebar-wrapper .education-container .meta {
   color: rgba(255, 255, 255, 0.6);
+  font-size: 14px;
   font-weight: 500;
   margin-bottom: 0px;
   margin-top: 0;
@@ -183,8 +188,8 @@ p {
   border-radius: 50%;
   -moz-background-clip: padding;
   -webkit-background-clip: padding-box;
-  background-clip: padding-box;
   background: #2d7788;
+  background-clip: padding-box;
   text-align: center;
   padding-top: 8px;
   font-size: 16px;
